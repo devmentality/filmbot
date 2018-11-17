@@ -73,7 +73,7 @@ public class Dialog {
 			printStream.println("Дополнительный параметр?[да/нет]");
 			String answer = scan.nextLine();
 			if (answer.equals("да"))
-				continue;
+				input = scan.nextLine();
 			else if (answer.equals("нет"))
 				break;
 			else
@@ -88,6 +88,7 @@ public class Dialog {
 //		}return Phrases.UNKNOWN_COMMAND;
 
 	}
+
 //эта штука должна работать как по одному параметру, так и по нескольким
 	private List<Film> getFilmsManyOptions(Map<Field, List<String>> commands) {
 		List<Film> correctFilms = new ArrayList<Film>();
