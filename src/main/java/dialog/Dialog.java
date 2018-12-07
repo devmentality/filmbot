@@ -1,5 +1,6 @@
 package dialog;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -7,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import storage.FilmDatabase;
+import storage.FilmRatingsDatabase;
 import structures.Film;
 import structures.Field;
 import structures.User;
@@ -15,10 +17,12 @@ public class Dialog {
 
 	private User user;
 	private FilmDatabase database;
+	private FilmRatingsDatabase ratingsDatabase;
 
-	public Dialog(User user, FilmDatabase database) {
+	public Dialog(User user, FilmDatabase database, FilmRatingsDatabase ratingsDatabase) {
 		this.user = user;
 		this.database = database;
+		this.ratingsDatabase = ratingsDatabase;
 	}
 
 	public String startDialog() {
@@ -52,10 +56,39 @@ public class Dialog {
 			return getFilm(user.currentOptions);
 		}
 		
+		if (input.trim().startsWith("/like"))
+			return processVote(input, true);
+		
+		if (input.trim().startsWith("/dislike"))
+			return processVote(input, false);
+		
 		if (input.trim().startsWith("/add")) 
 			return processAdd(input);
 		
 		return processGetFilmCommand(input);
+	}
+	
+	private String processVote(String input, boolean like)
+	{
+		String trimmedInput = input.trim();
+		int delimiterIndex = trimmedInput.indexOf(' ');
+		if (delimiterIndex == -1)
+			return "Некорректная операция";
+		
+		String filmName = trimmedInput.substring(delimiterIndex + 1, trimmedInput.length());
+		
+		try
+		{
+			if (!ratingsDatabase.contains(filmName))
+				ratingsDatabase.addFilm(filmName);
+			ratingsDatabase.updateRating(filmName, like ? 1 : -1);
+		}
+		catch(IOException ex)
+		{
+			return "Извините, у нас проблемы";
+		}
+		
+		return "Ваш голос учтен!";
 	}
 	
 	private String processGetFilmCommand(String input) {

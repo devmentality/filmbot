@@ -11,8 +11,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import storage.CSVHandler;
 import storage.FileFilmHandler;
 import storage.FilmDatabase;
+import storage.FilmRatingsDatabase;
 import storage.TestFilmDatabaseFileHandler;
 import structures.Film;
 import utils.FilmUtils;
@@ -49,7 +51,8 @@ public class TelegramBotTest {
 	@Test
 	public void TwoUsersTestDifferentRequest() throws Exception {
 		FilmDatabase database = getDatabase();
-		TelegramBot bot = new TelegramBot(database, null, null);
+		FilmRatingsDatabase ratingsDatabase = new FilmRatingsDatabase(new CSVHandler("testRatings"));
+		TelegramBot bot = new TelegramBot(database, ratingsDatabase, null, null);
 		State state1 = bot.getState("/y 1972", "1", DialogState.BASIC);
 		String ans1 = bot.getAnswer(state1, "name", "1");
 		State state2 = bot.getState("/c США", "2", DialogState.BASIC);
@@ -62,7 +65,8 @@ public class TelegramBotTest {
 	@Test
 	public void TwoUsersTestSameRequest() throws Exception {
 		FilmDatabase database = getDatabase();
-		TelegramBot bot = new TelegramBot(database, null, null);
+		FilmRatingsDatabase ratingsDatabase = new FilmRatingsDatabase(new CSVHandler("testRatings"));
+		TelegramBot bot = new TelegramBot(database, ratingsDatabase, null, null);
 		State state1 = bot.getState("/y 1972", "1", DialogState.BASIC);
 		String ans1 = bot.getAnswer(state1, "name",  "1");
 		State state2 = bot.getState("/y 1972", "2", DialogState.BASIC);

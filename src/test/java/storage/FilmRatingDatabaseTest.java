@@ -20,32 +20,32 @@ public class FilmRatingDatabaseTest
 	}
 
 	@Test
-	public void Contains_ShouldReturnFalse_WhenNoSuchFilm() throws IOException
+	public void сontains_ShouldReturnFalse_WhenNoSuchFilm() throws IOException
 	{
-		assertFalse(database.Contains(filmName));
+		assertFalse(database.contains(filmName));
 	}
 	
 	@Test
-	public void Contains_ShouldReturnTrue_WhenFilmAdded() throws IOException
+	public void сontains_ShouldReturnTrue_WhenFilmAdded() throws IOException
 	{
-		database.AddFilm(filmName);
-		assertTrue(database.Contains(filmName));
+		database.addFilm(filmName);
+		assertTrue(database.contains(filmName));
 	}
 	
 	@Test
-	public void GetRating_ShouldReturnZero_AfterAdd() throws IOException
+	public void getRating_ShouldReturnZero_AfterAdd() throws IOException
 	{
-		database.AddFilm(filmName);
-		assertEquals(0, database.GetRating(filmName));
+		database.addFilm(filmName);
+		assertEquals(0, database.getRating(filmName));
 	}
 	
 	@Test
-	public void UpdateRating_ShouldCorrectyChangeRating() throws IOException
+	public void updateRating_ShouldCorrectyChangeRating() throws IOException
 	{
 		int delta = 10;
-		database.AddFilm(filmName);
-		database.UpdateRating(filmName, delta);
+		database.addFilm(filmName);
+		database.updateRating(filmName, delta);
 		
-		assertEquals(delta, database.GetRating(filmName));
+		assertEquals(delta, database.getRating(filmName));
 	}
 }

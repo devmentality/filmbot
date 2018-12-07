@@ -1,7 +1,9 @@
 package dialog;
 
+import storage.CSVHandler;
 import storage.FileFilmHandler;
 import storage.FilmDatabase;
+import storage.FilmRatingsDatabase;
 import storage.TestFilmDatabaseFileHandler;
 
 import java.util.ArrayList;
@@ -26,6 +28,7 @@ public class DialogTest {
 	private User user;
 	private Dialog dialog;
 	private FilmDatabase database;
+	private static FilmRatingsDatabase ratingsDatabase;
 
 	@Before
 	public void setUp() throws Exception {
@@ -53,13 +56,14 @@ public class DialogTest {
 		user = new User("name", "name", userList, null);
 		database = new FilmDatabase(
 				new FileFilmHandler(new TestFilmDatabaseFileHandler(FilmUtils.filmListToStringList(filmList))));
-		dialog = new Dialog(user, database);
+		ratingsDatabase = new FilmRatingsDatabase(new CSVHandler("testRatings"));
+		dialog = new Dialog(user, database, ratingsDatabase);
 	}
 
 	@Test
 	public void testStartDialogFirstTime() throws Exception {
 		user = new User("name", "name", null, null);
-		dialog = new Dialog(user, database);
+		dialog = new Dialog(user, database, ratingsDatabase);
 		assertEquals(String.format("Добро пожаловать, name.%s", Phrases.HELP), dialog.startDialog());
 	}
 
@@ -198,7 +202,7 @@ public class DialogTest {
 		userData.put(Field.YEAR, new ArrayList<String>());
 		userData.get(Field.YEAR).add("1994");
 		user = new User("name", "name", userList, userData);
-		dialog = new Dialog(user, database);
+		dialog = new Dialog(user, database, ratingsDatabase);
 		assertEquals("Криминальное чтиво", dialog.processInput("/next"));
 	}
 

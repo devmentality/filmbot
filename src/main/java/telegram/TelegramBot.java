@@ -13,6 +13,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import dialog.Dialog;
 import storage.FilmDatabase;
+import storage.FilmRatingsDatabase;
 import structures.Field;
 import structures.User;
 import utils.UserUtils;
@@ -24,23 +25,26 @@ public class TelegramBot extends TelegramLongPollingBot {
 	private Map<String, Map<Field, List<String>>> idTotalFieldMap;
 	private Map<String, Field> idCurrentFieldMap;
 	private FilmDatabase database;
+	private FilmRatingsDatabase ratingsDatabase;
 	private Map<String, DialogState> userDialogState;
 
-	public TelegramBot(FilmDatabase database, String username, String token) {
+	public TelegramBot(FilmDatabase database, FilmRatingsDatabase ratingsDatabase, String username, String token) {
 		this.bot_username = username;
 		this.bot_token = token;
 		this.database = database;
+		this.ratingsDatabase = ratingsDatabase;
 		idTotalFieldMap = new HashMap<String, Map<Field, List<String>>>();
 		idCurrentFieldMap = new HashMap<String, Field>();
 		userDialogState = new HashMap<String, DialogState>();
 		
 	}
 
-	public TelegramBot(FilmDatabase database, String username, String token, DefaultBotOptions options) {
+	public TelegramBot(FilmDatabase database, FilmRatingsDatabase ratingsDatabase, String username, String token, DefaultBotOptions options) {
 		super(options);
 		this.bot_username = username;
 		this.bot_token = token;
 		this.database = database;
+		this.ratingsDatabase = ratingsDatabase;
 		idTotalFieldMap = new HashMap<String, Map<Field, List<String>>>();
 		idCurrentFieldMap = new HashMap<String, Field>();
 		userDialogState = new HashMap<String, DialogState>();
@@ -48,7 +52,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
 	private String processInput(String input, String username, String chatId) {
 		User user = UserUtils.getUser(username, chatId);
-		Dialog dialog = new Dialog(user, database);
+		Dialog dialog = new Dialog(user, database, ratingsDatabase);
 		String answer;
 		if (input.equals("/start"))
 			answer = dialog.startDialog();

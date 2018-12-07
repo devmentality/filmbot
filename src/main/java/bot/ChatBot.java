@@ -8,14 +8,17 @@ import java.util.Scanner;
 import dialog.Dialog;
 import dialog.Phrases;
 import storage.FilmDatabase;
+import storage.FilmRatingsDatabase;
 import structures.User;
 import utils.UserUtils;
 
 public class ChatBot {
 	private FilmDatabase database;
+	private FilmRatingsDatabase ratingsDatabase;
 
-	public ChatBot(FilmDatabase database) throws Exception {
+	public ChatBot(FilmDatabase database, FilmRatingsDatabase ratingsDatabase) throws Exception {
 		this.database = database;
+		this.ratingsDatabase = ratingsDatabase;
 	}
 
 	public void startChat(InputStream inputStream, OutputStream outputStream) throws Exception {
@@ -27,7 +30,7 @@ public class ChatBot {
 		String name = scan.nextLine();
 
 		User user = UserUtils.getUser(name, name);
-		Dialog dialog = new Dialog(user, database);
+		Dialog dialog = new Dialog(user, database, ratingsDatabase);
 
 		printStream.println(dialog.startDialog());
 		try {

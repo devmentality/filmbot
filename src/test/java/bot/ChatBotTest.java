@@ -3,6 +3,7 @@ package bot;
 import storage.CSVHandler;
 import storage.FileFilmHandler;
 import storage.FilmDatabase;
+import storage.FilmRatingsDatabase;
 import storage.IFilmHandler;
 
 import java.io.ByteArrayInputStream;
@@ -30,6 +31,7 @@ public class ChatBotTest {
 	protected final String dialogStartSecond = "Назовите себя, пожалуйста\r\n" + "Давно не виделись, test_name.\r\n";
 
 	private static FilmDatabase database;
+	private static FilmRatingsDatabase ratingsDatabase;
 	private static CSVHandler csvHandler;
 	private static IFilmHandler filmHandler;
 
@@ -52,44 +54,45 @@ public class ChatBotTest {
 		csvHandler = new CSVHandler("testDatabase");
 		filmHandler = new FileFilmHandler(csvHandler);
 		database = new FilmDatabase(filmHandler);
+		ratingsDatabase = new FilmRatingsDatabase(new CSVHandler("testRatings"));
 	}
 
 	@Test
 	public void testStartDialogFirstTime() throws Exception {
 		String[] commands = { name, "/exit" };
-		new ChatBot(database).startChat(getInput(commands), output);
+		new ChatBot(database, ratingsDatabase).startChat(getInput(commands), output);
 		assertThat(output.toString(), containsString("Добро пожаловать"));
 	}
 
 	@Test
 	public void testStartDialogSecondTime() throws Exception {
 		String[] commands = { name, "/exit" };
-		new ChatBot(database).startChat(getInput(commands), output);
+		new ChatBot(database, ratingsDatabase).startChat(getInput(commands), output);
 		output.reset();
-		new ChatBot(database).startChat(getInput(commands), output);
+		new ChatBot(database, ratingsDatabase).startChat(getInput(commands), output);
 		assertThat(output.toString(), containsString("Давно не виделись"));
 	}
 
 	@Test
 	public void testStartDialogGetFilm() throws Exception {
 		String[] commands = { name, "/y 1999", "/exit" };
-		new ChatBot(database).startChat(getInput(commands), output);
+		new ChatBot(database, ratingsDatabase).startChat(getInput(commands), output);
 		assertThat(output.toString(), containsString("Бойцовский клуб"));
 	}
 
 	@Test
 	public void testStartDialogGetFilmManyOptions() throws Exception {
 		String[] commands = { name, "/c США /g комедия", "/exit" };
-		new ChatBot(database).startChat(getInput(commands), output);
+		new ChatBot(database, ratingsDatabase).startChat(getInput(commands), output);
 		assertThat(output.toString(), containsString("Криминальное чтиво"));
 	}
 
 	@Test
 	public void testStartDialogGetFilmSecondTime() throws Exception {
 		String[] commands = { name, "/y 1999", "/exit" };
-		new ChatBot(database).startChat(getInput(commands), output);
+		new ChatBot(database, ratingsDatabase).startChat(getInput(commands), output);
 		output.reset();
-		new ChatBot(database).startChat(getInput(commands), output);
+		new ChatBot(database, ratingsDatabase).startChat(getInput(commands), output);
 		assertThat(output.toString(), containsString(Phrases.NO_MORE_FILM));
 	}
 
@@ -97,7 +100,7 @@ public class ChatBotTest {
 	public void testAddNewFilm() throws Exception {
 		String[] commands = { name, "/add /t Большой куш /c Великобритания, США /y 2000 /g криминал, комедия, боевик",
 				"/exit" };
-		new ChatBot(database).startChat(getInput(commands), output);
+		new ChatBot(database, ratingsDatabase).startChat(getInput(commands), output);
 		assertThat(output.toString(), containsString(Phrases.ADDING_FILM));
 		csvHandler.deleteData(filmHandler.getFilmsCount());
 	}
@@ -106,7 +109,7 @@ public class ChatBotTest {
 	public void testAddSameFilm() throws Exception {
 		String[] commands = { name, "/add /t Бойцовский клуб /c Германия, США /y 1999 /g драма, триллер, криминал",
 				"/exit" };
-		new ChatBot(database).startChat(getInput(commands), output);
+		new ChatBot(database, ratingsDatabase).startChat(getInput(commands), output);
 		assertThat(output.toString(), containsString(Phrases.ADDING_FILM_ERROR));
 	}
 
