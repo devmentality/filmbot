@@ -17,19 +17,29 @@ import structures.Film;
 public class APIHandler {
 	private TheMovieDbApi api;
 	public Map<String, Integer> genresId;
+	public List<String> years;
 
 	public APIHandler(String apiKey) throws MovieDbException {
 		api = new TheMovieDbApi("f6b6d91dd2768c08788768a2e8662e35");
 		genresId = getGenresId();
+		years = getAvailiableYears();
 	}
 
-	public Map<String, Integer> getGenresId() throws MovieDbException {
-		api = new TheMovieDbApi("f6b6d91dd2768c08788768a2e8662e35");
+	private Map<String, Integer> getGenresId() throws MovieDbException {
 		List<Genre> genres = api.getGenreMovieList("en").getResults();
 		Map<String, Integer> genresId = new HashMap<String, Integer>();
 		for (int i = 0; i < genres.size(); i++)
 			genresId.put(genres.get(i).getName(), genres.get(i).getId());
 		return genresId;
+	}
+
+	private List<String> getAvailiableYears() throws MovieDbException {
+		int maxYear = 2019;
+		int minYear = 1900;
+		List<String> years = new ArrayList<String>();
+		for (int i = 0; i < maxYear - minYear + 1; i++)
+			years.add(Integer.toString(minYear + i));
+		return years;
 	}
 
 	public Film getFilm(Map<Field, List<String>> options, List<String> savedFilmsIDs) throws MovieDbException {
@@ -42,12 +52,16 @@ public class APIHandler {
 		return null;
 	}
 
-	public List<MovieBasic> getDiscoverResult(Map<Field, List<String>> commands) throws MovieDbException {
+	private List<MovieBasic> getDiscoverResult(Map<Field, List<String>> commands) throws MovieDbException {
 		Discover discover = new Discover();
 		List<MovieBasic> discoveredFilms = new ArrayList<MovieBasic>();
 		for (Field field : commands.keySet()) {
-			if (field == Field.YEAR)
-				discover.year(Integer.parseInt(commands.get(field).get(0)));
+			try {
+				if (field == Field.YEAR)
+					discover.year(Integer.parseInt(commands.get(field).get(0)));
+			} catch (NumberFormatException e) {
+				return discoveredFilms;
+			}
 			if (field == Field.GENRE) {
 				List<String> genres = new ArrayList<String>();
 				for (String genre : commands.get(field))
@@ -55,11 +69,12 @@ public class APIHandler {
 				discover.withGenres(String.join(",", genres));
 			}
 		}
+
 		discoveredFilms = api.getDiscoverMovies(discover).getResults();
 		return discoveredFilms;
 	}
 
-	public List<Film> getFilmsByOptions(Map<Field, List<String>> commands) throws MovieDbException {
+	private List<Film> getFilmsByOptions(Map<Field, List<String>> commands) throws MovieDbException {
 		List<MovieBasic> discoveredFilms = getDiscoverResult(commands);
 		List<Film> filmList = new ArrayList<Film>();
 		if (discoveredFilms.size() == 0)

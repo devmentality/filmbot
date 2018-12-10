@@ -17,9 +17,9 @@ public class Dialog {
 	private User user;
 	private APIHandler apiDatabase;
 
-	public Dialog(User user, String apiKey) throws MovieDbException {
+	public Dialog(User user, APIHandler apiDatabase) throws MovieDbException {
 		this.user = user;
-		this.apiDatabase = new APIHandler(apiKey);
+		this.apiDatabase = apiDatabase;
 	}
 
 	public String startDialog() {

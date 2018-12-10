@@ -7,15 +7,16 @@ import java.util.Scanner;
 
 import dialog.Dialog;
 import dialog.Phrases;
+import storage.APIHandler;
 import structures.User;
 import utils.UserUtils;
 
 public class ChatBot {
 
-	private String apiKey;
+	private APIHandler apiDatabase;
 
-	public ChatBot(String apiKey) throws Exception {
-		this.apiKey = apiKey;
+	public ChatBot(APIHandler apiDatabase) throws Exception {
+		this.apiDatabase = apiDatabase;
 	}
 
 	public void startChat(InputStream inputStream, OutputStream outputStream) throws Exception {
@@ -27,7 +28,7 @@ public class ChatBot {
 		String name = scan.nextLine();
 
 		User user = UserUtils.getUser(name, name);
-		Dialog dialog = new Dialog(user, apiKey);
+		Dialog dialog = new Dialog(user, apiDatabase);
 
 		printStream.println(dialog.startDialog());
 		try {
