@@ -1,12 +1,13 @@
 package dialog;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import storage.FilmDatabase;
+import com.omertron.themoviedbapi.MovieDbException;
+
+import storage.APIHandler;
 import structures.Film;
 import structures.Field;
 import structures.User;
@@ -14,11 +15,11 @@ import structures.User;
 public class Dialog {
 
 	private User user;
-	private FilmDatabase database;
+	private APIHandler apiDatabase;
 
-	public Dialog(User user, FilmDatabase database) {
+	public Dialog(User user, APIHandler apiDatabase) throws MovieDbException {
 		this.user = user;
-		this.database = database;
+		this.apiDatabase = apiDatabase;
 	}
 
 	public String startDialog() {
@@ -27,24 +28,18 @@ public class Dialog {
 		return String.format("Давно не виделись, %s.", user.name);
 	}
 
-	public String processInput(String input) {
+	public String processInput(String input) throws MovieDbException {
 		if (input.length() < 3)
 			return Phrases.SHORT_COMMAND;
 
 		if (input.equals("/help"))
 			return Phrases.HELP;
 
-		if (input.equals("/countries"))
-			return Phrases.AVAILAIBLE_COUNTRIES + String.join("\n", database.getFieldValuesArray(Field.COUNTRY));
-
 		if (input.equals("/genres"))
-			return Phrases.AVAILAIBLE_GENRES + String.join("\n", database.getFieldValuesArray(Field.GENRE));
+			return Phrases.AVAILAIBLE_GENRES + String.join("\n", apiDatabase.genresId.keySet());
 
 		if (input.equals("/years"))
-			return Phrases.AVAILAIBLE_YEARS + String.join("\n", database.getFieldValuesArray(Field.YEAR));
-
-		if (input.equals("/adding"))
-			return Phrases.ADDING_PROCESS;
+			return Phrases.AVAILAIBLE_YEARS;
 
 		if (input.equals("/next")) {
 			if (user.currentOptions == null)
@@ -52,13 +47,10 @@ public class Dialog {
 			return getFilm(user.currentOptions);
 		}
 		
-		if (input.trim().startsWith("/add")) 
-			return processAdd(input);
-		
 		return processGetFilmCommand(input);
 	}
 	
-	private String processGetFilmCommand(String input) {
+	private String processGetFilmCommand(String input) throws MovieDbException {
 		String[] commandArray = input.trim().substring(1).split("/");
 
 		Map<Field, List<String>> commands = new HashMap<Field, List<String>>();
@@ -77,10 +69,10 @@ public class Dialog {
 				if (!fieldShortCut.equals(field.shortCut()))
 					continue;
 
-				if (!database.requestExistInDatabase(field, requestedOption)) {
-					user.clearCurrentOptions();
-					return field.noFilmsAtAll();
-				}
+//				if (!database.requestExistInDatabase(field, requestedOption)) {
+//					user.clearCurrentOptions();
+//					return field.noFilmsAtAll();
+//				}
 
 				if (commands.get(field) == null)
 					commands.put(field, new ArrayList<String>());
@@ -94,51 +86,10 @@ public class Dialog {
 		}
 		return getFilm(commands);
 	}
-	
-	private String processAdd(String input) {
-		String title = "";
-		List<String> countries = new ArrayList<String>();
-		List<String> year = new ArrayList<String>();
-		List<String> genres = new ArrayList<String>();
 
-		String[] commandArray = input.trim().substring(4).split("/");
-
-		for (int i = 0; i < commandArray.length; i++) {
-			String[] options = commandArray[i].split(" ", 2);
-			if (options.length < 2)
-				return Phrases.ADDING_PROCESS_ERROR;
-			String command = options[0].trim();
-			String option = options[1].trim();
-
-			switch (command) {
-			case "t":
-				title = option;
-				break;
-			case "c":
-				countries.addAll(Arrays.asList(option.split(", ")));
-				break;
-			case "y":
-				year.add(option);
-				break;
-			case "g":
-				genres.addAll(Arrays.asList(option.split(", ")));
-				break;
-			}
-		}
-		if (title == "" || countries.size() == 0 || year.size() == 0 || genres.size() == 0)
-			return Phrases.ADDING_PROCESS_ERROR;
-		try {
-			database.addFilmToDatabase(title, countries, year, genres);
-		} catch (Exception e) {
-			return e.getMessage();
-		}
-		return Phrases.ADDING_FILM;
-	}
-
-	private String getFilm(Map<Field, List<String>> commands) {
+	private String getFilm(Map<Field, List<String>> commands) throws MovieDbException {
 		user.changeCurrentOptions(commands);
-
-		Film film = database.getFilm(commands, user.savedFilmsIDs);
+		Film film = apiDatabase.getFilm(commands, user.savedFilmsIDs);
 		if (film != null && film.ID.equals("None"))
 			return Phrases.NO_SUCH_FILM;
 		else if (film != null)

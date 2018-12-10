@@ -8,16 +8,17 @@ import java.util.Map;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
-import storage.FilmDatabase;
+import com.omertron.themoviedbapi.MovieDbException;
+
+import storage.APIHandler;
 import structures.Field;
-import utils.FilmUtils;
 
 public class State {
 
 	private DialogState currentState;
 	public DialogState newState;
 	private Map<Field, List<String>> currentIdFieldMap;
-	private FilmDatabase database;
+	private APIHandler apiDatabase;
 
 	private ReplyKeyboardMarkup keyboard;
 
@@ -25,11 +26,11 @@ public class State {
 	public String answerString;
 	public Field currentField;
 
-	public State(DialogState state, Map<Field, List<String>> currentIdFieldMap, FilmDatabase database,
-			Field currentField) {
+	public State(DialogState state, Map<Field, List<String>> currentIdFieldMap, APIHandler apiDatabase,
+			Field currentField) throws MovieDbException {
 		this.currentState = state;
 		this.currentIdFieldMap = currentIdFieldMap;
-		this.database = database;
+		this.apiDatabase = apiDatabase;
 		this.currentField = currentField;
 	}
 
@@ -66,7 +67,7 @@ public class State {
 			keyboard = getBasicKeyboard();
 			newState = DialogState.BASIC;
 			currentField = null;
-			command = FilmUtils.getCommand(currentIdFieldMap);
+			command = getCommand(currentIdFieldMap);
 			for (Field field : Field.values())
 				currentIdFieldMap.remove(field);
 		} else {
@@ -78,18 +79,18 @@ public class State {
 	}
 
 	private void processChosingState(String input) {
-		if (!database.requestExistInDatabase(currentField, input)) {
-			command = input;
-			keyboard = getBasicKeyboard();
-			newState = DialogState.BASIC;
-			currentField = null;
-		} else {
+//		if (!database.requestExistInDatabase(currentField, input)) {
+//			command = input;
+//			keyboard = getBasicKeyboard();
+//			newState = DialogState.BASIC;
+//			currentField = null;
+//		} else {
 			currentIdFieldMap.get(currentField).add(input);
 			newState = DialogState.MORE_OPTIONS;
 			answerString = "Есть еще параметры?";
 			currentField = null;
 			keyboard = getMoreOptionsKeyboard();
-		}
+//		}
 	}
 
 	private void processBasicState(String input) {
@@ -109,14 +110,19 @@ public class State {
 		}
 	}
 
-	public State getNewState() {
-		return new State(newState, currentIdFieldMap, database, currentField);
+	public State getNewState() throws MovieDbException {
+		return new State(newState, currentIdFieldMap, apiDatabase, currentField);
 	}
 
 	private ReplyKeyboardMarkup getChosingKeyboard(Field field) {
 		ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
 		List<KeyboardRow> keyboard = new ArrayList<>();
-		String[] buttons = database.getFieldValuesArray(field);
+		List<String> buttons = new ArrayList<String>();
+		if (field.equals(Field.GENRE)) {
+			buttons.addAll(apiDatabase.genresId.keySet());
+		}
+		if (field.equals(Field.YEAR))
+			buttons = apiDatabase.years;
 		for (String button : buttons) {
 			KeyboardRow row = new KeyboardRow();
 			row.add(button);
@@ -162,6 +168,14 @@ public class State {
 
 	public ReplyKeyboardMarkup getKeyboard() {
 		return keyboard;
+	}
+	
+	private String getCommand(Map<Field, List<String>> inputMap) {
+		String command = "";
+		for (Map.Entry<Field, List<String>> entry : inputMap.entrySet()) {
+			command += "/" + entry.getKey().shortCut() + " " + String.join(", ", entry.getValue()) + " ";
+		}
+		return command;
 	}
 
 }
