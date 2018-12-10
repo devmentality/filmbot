@@ -1,13 +1,15 @@
 package dialog;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.omertron.themoviedbapi.MovieDbException;
-
 import storage.APIHandler;
+import storage.FilmRatingsDatabase;
+
 import structures.Film;
 import structures.Field;
 import structures.User;
@@ -16,10 +18,12 @@ public class Dialog {
 
 	private User user;
 	private APIHandler apiDatabase;
+	private FilmRatingsDatabase ratingsDatabase;
 
-	public Dialog(User user, APIHandler apiDatabase) throws MovieDbException {
+	public Dialog(User user, APIHandler apiDatabase, FilmRatingsDatabase ratingsDatabase) throws MovieDbException {
 		this.user = user;
 		this.apiDatabase = apiDatabase;
+		this.ratingsDatabase = ratingsDatabase;
 	}
 
 	public String startDialog() {
@@ -46,8 +50,37 @@ public class Dialog {
 				return Phrases.NEXT_WITHOUT_OPT;
 			return getFilm(user.currentOptions);
 		}
+        
+        if (input.trim().startsWith("/like"))
+			return processVote(input, true);
+		
+		if (input.trim().startsWith("/dislike"))
+			return processVote(input, false);
 		
 		return processGetFilmCommand(input);
+	}
+	
+	private String processVote(String input, boolean like)
+	{
+		String trimmedInput = input.trim();
+		int delimiterIndex = trimmedInput.indexOf(' ');
+		if (delimiterIndex == -1)
+			return "Некорректная операция";
+		
+		String filmName = trimmedInput.substring(delimiterIndex + 1, trimmedInput.length());
+		
+		try
+		{
+			if (!ratingsDatabase.contains(filmName))
+				ratingsDatabase.addFilm(filmName);
+			ratingsDatabase.updateRating(filmName, like ? 1 : -1);
+		}
+		catch(IOException ex)
+		{
+			return "Извините, у нас проблемы";
+		}
+		
+		return "Ваш голос учтен!";
 	}
 	
 	private String processGetFilmCommand(String input) throws MovieDbException {
@@ -96,7 +129,19 @@ public class Dialog {
 			user.addFilm(film);
 		else
 			user.clearCurrentOptions();
-		return film != null ? film.title : Phrases.NO_MORE_FILM;
+		if (film == null)
+			return Phrases.NO_MORE_FILM;
+		
+		int rating;
+		try
+		{
+			rating = ratingsDatabase.getRating(film.title);
+			return String.format("%s\nРейтинг: %d", film.title, rating); 
+		}
+		catch(IOException ex)
+		{
+			return film.title; 
+		}
 	}
 
 }

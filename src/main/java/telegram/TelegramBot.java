@@ -15,6 +15,8 @@ import com.omertron.themoviedbapi.MovieDbException;
 
 import dialog.Dialog;
 import storage.APIHandler;
+import dialog.Phrases;
+import storage.FilmRatingsDatabase;
 import structures.Field;
 import structures.User;
 import utils.UserUtils;
@@ -26,23 +28,25 @@ public class TelegramBot extends TelegramLongPollingBot {
 	private Map<String, Map<Field, List<String>>> idTotalFieldMap;
 	private Map<String, Field> idCurrentFieldMap;
 	private APIHandler apiDatabase;
+	private FilmRatingsDatabase ratingsDatabase;
 	private Map<String, DialogState> userDialogState;
 
-	public TelegramBot(APIHandler apiDatabase, String username, String token) {
+	public TelegramBot(APIHandler apiDatabase, FilmRatingsDatabase ratingsDatabase, String username, String token) {
 		this.bot_username = username;
 		this.bot_token = token;
 		this.apiDatabase = apiDatabase;
+		this.ratingsDatabase = ratingsDatabase;
 		idTotalFieldMap = new HashMap<String, Map<Field, List<String>>>();
 		idCurrentFieldMap = new HashMap<String, Field>();
 		userDialogState = new HashMap<String, DialogState>();
-
 	}
 
-	public TelegramBot(APIHandler apiDatabase, String username, String token, DefaultBotOptions options) {
+	public TelegramBot(APIHandler apiDatabase, FilmRatingsDatabase ratingsDatabase, String username, String token, DefaultBotOptions options) {
 		super(options);
 		this.bot_username = username;
 		this.bot_token = token;
 		this.apiDatabase = apiDatabase;
+		this.ratingsDatabase = ratingsDatabase;
 		idTotalFieldMap = new HashMap<String, Map<Field, List<String>>>();
 		idCurrentFieldMap = new HashMap<String, Field>();
 		userDialogState = new HashMap<String, DialogState>();
@@ -50,7 +54,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
 	private String processInput(String input, String username, String chatId) throws MovieDbException {
 		User user = UserUtils.getUser(username, chatId);
-		Dialog dialog = new Dialog(user, apiDatabase);
+		Dialog dialog = new Dialog(user, apiDatabase, ratingsDatabase);
 		String answer;
 		if (input.equals("/start"))
 			answer = dialog.startDialog();
