@@ -12,6 +12,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import dialog.Dialog;
+import dialog.Phrases;
 import storage.FilmDatabase;
 import storage.FilmRatingsDatabase;
 import structures.Field;
@@ -112,7 +113,6 @@ public class TelegramBot extends TelegramLongPollingBot {
 		currentState.processInput(input);
 		return currentState;
 	}
-
 
 	@Override
 	public String getBotUsername() {

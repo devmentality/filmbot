@@ -16,10 +16,8 @@ public class FilmRatingsDatabase
 	{
 		List<String[]> allRecords = fileHandler.extractData();
 		for(String[] record: allRecords)
-		{
 			if (record[0].equals(filmName))
 				return true;
-		}
 		
 		return false;
 	}
@@ -28,13 +26,10 @@ public class FilmRatingsDatabase
 	{
 		List<String[]> allRecords = fileHandler.extractData();
 		for(String[] record: allRecords)
-		{
 			if (record[0].equals(filmName))
 				return Integer.parseInt(record[1]);
-				
-		}
 		
-		throw new IllegalArgumentException("No such film");
+		return 0;
 	}
 	
 	public synchronized void addFilm(String filmName) throws IOException
@@ -46,10 +41,9 @@ public class FilmRatingsDatabase
 	{
 		List<String[]> allRecords = fileHandler.extractData();
 		for(String[] record: allRecords)
-		{
 			if (record[0].equals(filmName))
 				record[1] = String.valueOf(Integer.parseInt(record[1]) + ratingDelta);
-		}
+		
 		fileHandler.saveData(allRecords);
 	}
 }

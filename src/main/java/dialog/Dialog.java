@@ -178,7 +178,19 @@ public class Dialog {
 			user.addFilm(film);
 		else
 			user.clearCurrentOptions();
-		return film != null ? film.title : Phrases.NO_MORE_FILM;
+		if (film == null)
+			return Phrases.NO_MORE_FILM;
+		
+		int rating;
+		try
+		{
+			rating = ratingsDatabase.getRating(film.title);
+			return String.format("%s\nРейтинг: %d", film.title, rating); 
+		}
+		catch(IOException ex)
+		{
+			return film.title; 
+		}
 	}
 
 }
