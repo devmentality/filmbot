@@ -7,15 +7,15 @@ import java.util.Scanner;
 
 import dialog.Dialog;
 import dialog.Phrases;
-import storage.FilmDatabase;
 import structures.User;
 import utils.UserUtils;
 
 public class ChatBot {
-	private FilmDatabase database;
 
-	public ChatBot(FilmDatabase database) throws Exception {
-		this.database = database;
+	private String apiKey;
+
+	public ChatBot(String apiKey) throws Exception {
+		this.apiKey = apiKey;
 	}
 
 	public void startChat(InputStream inputStream, OutputStream outputStream) throws Exception {
@@ -27,7 +27,7 @@ public class ChatBot {
 		String name = scan.nextLine();
 
 		User user = UserUtils.getUser(name, name);
-		Dialog dialog = new Dialog(user, database);
+		Dialog dialog = new Dialog(user, apiKey);
 
 		printStream.println(dialog.startDialog());
 		try {
