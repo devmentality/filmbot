@@ -20,7 +20,7 @@ public class APIHandler {
 	public List<String> years;
 
 	public APIHandler(String apiKey) throws MovieDbException {
-		api = new TheMovieDbApi("f6b6d91dd2768c08788768a2e8662e35");
+		api = new TheMovieDbApi(apiKey);
 		genresId = getGenresId();
 		years = getAvailiableYears();
 	}
