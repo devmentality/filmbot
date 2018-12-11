@@ -8,22 +8,24 @@ import java.util.Map;
 
 import com.omertron.themoviedbapi.MovieDbException;
 import storage.APIHandler;
-import storage.FilmRatingsDatabase;
+import storage.VotesDatabase;
 
 import structures.Film;
 import structures.Field;
 import structures.User;
+import structures.Vote;
+import utils.RatingCalculator;
 
 public class Dialog {
 
 	private User user;
 	private APIHandler apiDatabase;
-	private FilmRatingsDatabase ratingsDatabase;
+	private VotesDatabase votesDatabase;
 
-	public Dialog(User user, APIHandler apiDatabase, FilmRatingsDatabase ratingsDatabase) throws MovieDbException {
+	public Dialog(User user, APIHandler apiDatabase, VotesDatabase votesDatabase) throws MovieDbException {
 		this.user = user;
 		this.apiDatabase = apiDatabase;
-		this.ratingsDatabase = ratingsDatabase;
+		this.votesDatabase = votesDatabase;
 	}
 
 	public String startDialog() {
@@ -51,36 +53,49 @@ public class Dialog {
 			return getFilm(user.currentOptions);
 		}
         
-        if (input.trim().startsWith("/like"))
-			return processVote(input, true);
-		
-		if (input.trim().startsWith("/dislike"))
-			return processVote(input, false);
+        if (input.trim().startsWith("/like") || 
+        	input.trim().startsWith("/dislike"))
+        {
+        	Vote vote;
+        	try 
+        	{
+        		vote = ParseVote(user, input);
+        	}
+        	catch(IllegalArgumentException ex)
+        	{
+        		return ex.getMessage();
+        	}
+        	return processVote(vote);
+        }
 		
 		return processGetFilmCommand(input);
 	}
 	
-	private String processVote(String input, boolean like)
+	private Vote ParseVote(User user, String input) throws IllegalArgumentException
 	{
 		String trimmedInput = input.trim();
 		int delimiterIndex = trimmedInput.indexOf(' ');
 		if (delimiterIndex == -1)
-			return "Некорректная операция";
+			throw new IllegalArgumentException("Некорректный формат");
 		
 		String filmName = trimmedInput.substring(delimiterIndex + 1, trimmedInput.length());
 		
+		return new Vote(user.ID, filmName, input.startsWith("/like"));
+	}
+	
+	private String processVote(Vote vote)
+	{
 		try
 		{
-			if (!ratingsDatabase.contains(filmName))
-				ratingsDatabase.addFilm(filmName);
-			ratingsDatabase.updateRating(filmName, like ? 1 : -1);
+			if (votesDatabase.containsVote(vote.getUserId(), vote.getFilmName()))
+				return "Вы уже оставили свой голос за этот фильм.";
+			votesDatabase.addVote(vote);
+			return "Ваш голос учтён!";
 		}
 		catch(IOException ex)
 		{
 			return "Извините, у нас проблемы";
 		}
-		
-		return "Ваш голос учтен!";
 	}
 	
 	private String processGetFilmCommand(String input) throws MovieDbException {
@@ -135,7 +150,7 @@ public class Dialog {
 		int rating;
 		try
 		{
-			rating = ratingsDatabase.getRating(film.title);
+			rating = RatingCalculator.CalculateRating(votesDatabase.getVotes(film.title), film.title);
 			return String.format("%s\nРейтинг: %d", film.title, rating); 
 		}
 		catch(IOException ex)
