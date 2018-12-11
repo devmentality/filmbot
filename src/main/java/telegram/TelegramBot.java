@@ -1,23 +1,33 @@
 package telegram;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import com.omertron.themoviedbapi.MovieDbException;
 
 import dialog.Dialog;
 import storage.APIHandler;
+import dialog.Phrases;
+import storage.VotesDatabase;
 import structures.Field;
 import structures.User;
 import utils.UserUtils;
+
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 public class TelegramBot extends TelegramLongPollingBot {
 
@@ -26,23 +36,25 @@ public class TelegramBot extends TelegramLongPollingBot {
 	private Map<String, Map<Field, List<String>>> idTotalFieldMap;
 	private Map<String, Field> idCurrentFieldMap;
 	private APIHandler apiDatabase;
+	private VotesDatabase votesDatabase;
 	private Map<String, DialogState> userDialogState;
 
-	public TelegramBot(APIHandler apiDatabase, String username, String token) {
+	public TelegramBot(APIHandler apiDatabase, VotesDatabase votesDatabase, String username, String token) {
 		this.bot_username = username;
 		this.bot_token = token;
 		this.apiDatabase = apiDatabase;
+		this.votesDatabase = votesDatabase;
 		idTotalFieldMap = new HashMap<String, Map<Field, List<String>>>();
 		idCurrentFieldMap = new HashMap<String, Field>();
 		userDialogState = new HashMap<String, DialogState>();
-
 	}
 
-	public TelegramBot(APIHandler apiDatabase, String username, String token, DefaultBotOptions options) {
+	public TelegramBot(APIHandler apiDatabase, VotesDatabase votesDatabase, String username, String token, DefaultBotOptions options) {
 		super(options);
 		this.bot_username = username;
 		this.bot_token = token;
 		this.apiDatabase = apiDatabase;
+		this.votesDatabase = votesDatabase;
 		idTotalFieldMap = new HashMap<String, Map<Field, List<String>>>();
 		idCurrentFieldMap = new HashMap<String, Field>();
 		userDialogState = new HashMap<String, DialogState>();
@@ -50,7 +62,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
 	private String processInput(String input, String username, String chatId) throws MovieDbException {
 		User user = UserUtils.getUser(username, chatId);
-		Dialog dialog = new Dialog(user, apiDatabase);
+		Dialog dialog = new Dialog(user, apiDatabase, votesDatabase);
 		String answer;
 		if (input.equals("/start"))
 			answer = dialog.startDialog();
@@ -67,11 +79,26 @@ public class TelegramBot extends TelegramLongPollingBot {
 	@Override
 	public void onUpdateReceived(Update update) {
 
+		if (update.hasCallbackQuery())
+		{
+			CallbackQuery query = update.getCallbackQuery();
+			try {
+				processCallback(query.getFrom().getFirstName(),
+						String.valueOf(query.getMessage().getChatId()), 
+						query);
+			}
+			catch(MovieDbException ex)
+			{
+				ex.printStackTrace();
+			}
+			
+			return;
+		}
+		
 		Message inputMessage = update.getMessage();
 		String inputCommand = inputMessage.getText();
 		String id = inputMessage.getChatId().toString();
 		String userFirstName = inputMessage.getFrom().getFirstName();
-		SendMessage message = new SendMessage();
 
 		if (userDialogState.get(id) == null)
 			userDialogState.put(id, DialogState.BASIC);
@@ -87,18 +114,94 @@ public class TelegramBot extends TelegramLongPollingBot {
 
 			userDialogState.put(id, newState.newState);
 
-			message.setText(answer);
-			message.setReplyMarkup(newState.getKeyboard());
-
-			message.setChatId(inputMessage.getChatId());
+			
+			
+			if (isFilmAnswer(answer))
+			{
+				sendMessage(prepareFilmSendMessage(answer, inputMessage.getChatId()));
+				sendMessage(prepareOrdinaryMessage("Press next to get next film", inputMessage.getChatId(), newState));
+			}
+			else
+				sendMessage(prepareOrdinaryMessage(answer, inputMessage.getChatId(), newState));
+			
 		} catch (MovieDbException e) {
 			// e.printStackTrace();
 		}
+	}
+	
+	private SendMessage prepareOrdinaryMessage(String answer, long chatId, State newState)
+	{
+		SendMessage message = new SendMessage();
+		message.setText(answer);
+		message.setChatId(chatId);
+		message.setReplyMarkup(newState.getKeyboard());
+		
+		return message;
+	}
+	
+	private SendMessage prepareFilmSendMessage(String answer, long chatId)
+	{
+		String filmName = extractFilmName(answer);
+		SendMessage message = new SendMessage();
+		message.setText(answer);
+		message.setChatId(chatId);
+		
+		attachVotingButtons(filmName, message);
+		return message;
+	}
+	
+	private void sendMessage(SendMessage message)
+	{
 		try {
 			execute(message);
 		} catch (TelegramApiException e) {
 			// e.printStackTrace();
 		}
+	}
+	
+	private void processCallback(String username, String chatId, CallbackQuery query) throws MovieDbException
+	{
+		String queryText = query.getData();
+		String rawAnswer = processInput(queryText, username, chatId);
+		
+		AnswerCallbackQuery answer = new AnswerCallbackQuery();
+        answer.setCallbackQueryId(query.getId());
+        answer.setText(rawAnswer);
+        answer.setShowAlert(true);
+        try {
+            execute(answer);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+	}
+	
+	private boolean isFilmAnswer(String answer)
+	{
+		Pattern p = Pattern.compile("^(.+)\nРейтинг: [0-9]+$");
+		Matcher m = p.matcher(answer);
+		
+		return m.matches();
+	}
+	
+	private String extractFilmName(String answer)
+	{
+		Pattern p = Pattern.compile("^(.+)\nРейтинг: [0-9]+$");
+		Matcher m = p.matcher(answer);
+		m.find();
+		return m.group(1);
+	}
+	
+	private void attachVotingButtons(String filmName, SendMessage message)
+	{
+		List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
+        List<InlineKeyboardButton> row = new ArrayList<>();
+        row.add(new InlineKeyboardButton().setText("Like").setCallbackData("/like " + filmName));
+        row.add(new InlineKeyboardButton().setText("Dislike").setCallbackData("/dislike " + filmName));
+        buttons.add(row);
+
+        InlineKeyboardMarkup markupKeyboard = new InlineKeyboardMarkup();
+        markupKeyboard.setKeyboard(buttons);
+        message.setReplyMarkup(markupKeyboard);
 	}
 
 	public String getAnswer(State state, String username, String id) throws MovieDbException {

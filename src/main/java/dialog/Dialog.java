@@ -1,25 +1,31 @@
 package dialog;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.omertron.themoviedbapi.MovieDbException;
-
 import storage.APIHandler;
+import storage.VotesDatabase;
+
 import structures.Film;
 import structures.Field;
 import structures.User;
+import structures.Vote;
+import utils.RatingCalculator;
 
 public class Dialog {
 
 	private User user;
 	private APIHandler apiDatabase;
+	private VotesDatabase votesDatabase;
 
-	public Dialog(User user, APIHandler apiDatabase) throws MovieDbException {
+	public Dialog(User user, APIHandler apiDatabase, VotesDatabase votesDatabase) throws MovieDbException {
 		this.user = user;
 		this.apiDatabase = apiDatabase;
+		this.votesDatabase = votesDatabase;
 	}
 
 	public String startDialog() {
@@ -46,8 +52,50 @@ public class Dialog {
 				return Phrases.NEXT_WITHOUT_OPT;
 			return getFilm(user.currentOptions);
 		}
+        
+        if (input.trim().startsWith("/like") || 
+        	input.trim().startsWith("/dislike"))
+        {
+        	Vote vote;
+        	try 
+        	{
+        		vote = ParseVote(user, input);
+        	}
+        	catch(IllegalArgumentException ex)
+        	{
+        		return ex.getMessage();
+        	}
+        	return processVote(vote);
+        }
 		
 		return processGetFilmCommand(input);
+	}
+	
+	private Vote ParseVote(User user, String input) throws IllegalArgumentException
+	{
+		String trimmedInput = input.trim();
+		int delimiterIndex = trimmedInput.indexOf(' ');
+		if (delimiterIndex == -1)
+			throw new IllegalArgumentException("Некорректный формат");
+		
+		String filmName = trimmedInput.substring(delimiterIndex + 1, trimmedInput.length());
+		
+		return new Vote(user.ID, filmName, input.startsWith("/like"));
+	}
+	
+	private String processVote(Vote vote)
+	{
+		try
+		{
+			if (votesDatabase.containsVote(vote.getUserId(), vote.getFilmName()))
+				return "Вы уже оставили свой голос за этот фильм.";
+			votesDatabase.addVote(vote);
+			return "Ваш голос учтён!";
+		}
+		catch(IOException ex)
+		{
+			return "Извините, у нас проблемы";
+		}
 	}
 	
 	private String processGetFilmCommand(String input) throws MovieDbException {
@@ -96,7 +144,19 @@ public class Dialog {
 			user.addFilm(film);
 		else
 			user.clearCurrentOptions();
-		return film != null ? film.title : Phrases.NO_MORE_FILM;
+		if (film == null)
+			return Phrases.NO_MORE_FILM;
+		
+		int rating;
+		try
+		{
+			rating = RatingCalculator.CalculateRating(votesDatabase.getVotes(film.title), film.title);
+			return String.format("%s\nРейтинг: %d", film.title, rating); 
+		}
+		catch(IOException ex)
+		{
+			return film.title; 
+		}
 	}
 
 }

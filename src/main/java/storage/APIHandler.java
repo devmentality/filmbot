@@ -1,6 +1,9 @@
 package storage;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,16 +16,21 @@ import com.omertron.themoviedbapi.model.movie.MovieBasic;
 
 import structures.Field;
 import structures.Film;
+import utils.RatingCalculator;
+import structures.RatedFilm;
+import structures.Vote;
 
 public class APIHandler {
 	private TheMovieDbApi api;
 	public Map<String, Integer> genresId;
 	public List<String> years;
-
-	public APIHandler(String apiKey) throws MovieDbException {
+	public VotesDatabase votesDatabase;
+	
+	public APIHandler(String apiKey, VotesDatabase votesDatabase) throws MovieDbException {
 		api = new TheMovieDbApi(apiKey);
 		genresId = getGenresId();
 		years = getAvailiableYears();
+		this.votesDatabase = votesDatabase;
 	}
 
 	private Map<String, Integer> getGenresId() throws MovieDbException {
@@ -43,12 +51,14 @@ public class APIHandler {
 	}
 
 	public Film getFilm(Map<Field, List<String>> options, List<String> savedFilmsIDs) throws MovieDbException {
-		List<Film> possibleFilms = getFilmsByOptions(options);
+		List<RatedFilm> possibleFilms = getFilmsByOptions(options);
+		Collections.sort(possibleFilms, Comparator.reverseOrder());
+		
 		if (possibleFilms.size() == 0)
 			return new Film("None", null);
-		for (Film film : possibleFilms)
-			if (!savedFilmsIDs.contains(film.ID))
-				return film;
+		for (RatedFilm ratedFilm : possibleFilms)
+			if (!savedFilmsIDs.contains(ratedFilm.getFilm().ID))
+				return ratedFilm.getFilm();
 		return null;
 	}
 
@@ -74,9 +84,17 @@ public class APIHandler {
 		return discoveredFilms;
 	}
 
-	private List<Film> getFilmsByOptions(Map<Field, List<String>> commands) throws MovieDbException {
+	private List<RatedFilm> getFilmsByOptions(Map<Field, List<String>> commands) throws MovieDbException {
+		List<Vote> votes = new ArrayList<Vote>();
+		try
+		{
+			votes = votesDatabase.getAllVotes();
+		}
+		catch(IOException ex)
+		{ }
+		
 		List<MovieBasic> discoveredFilms = getDiscoverResult(commands);
-		List<Film> filmList = new ArrayList<Film>();
+		List<RatedFilm> filmList = new ArrayList<RatedFilm>();
 		if (discoveredFilms.size() == 0)
 			return filmList;
 		for (MovieBasic film : discoveredFilms) {
@@ -84,10 +102,14 @@ public class APIHandler {
 			if (commands.get(Field.YEAR) != null) {
 				String year = api.getMovieInfo(filmId, "en").getReleaseDate().substring(0, 4);
 				if (year.equals(commands.get(Field.YEAR).get(0)))
-					filmList.add(new Film(filmId.toString(), film.getTitle()));
+					filmList.add(new RatedFilm(
+							new Film(filmId.toString(), film.getTitle()),
+							RatingCalculator.CalculateRating(votes, film.getTitle())));
 			}
 			if (commands.get(Field.GENRE) != null)
-				filmList.add(new Film(filmId.toString(), film.getTitle()));
+				filmList.add(new RatedFilm(
+						new Film(filmId.toString(), film.getTitle()),
+						RatingCalculator.CalculateRating(votes, film.getTitle())));
 		}
 		return filmList;
 	}

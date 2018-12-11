@@ -154,9 +154,6 @@ public class State {
 		row.add("YEAR");
 		keyboard.add(row);
 		row = new KeyboardRow();
-		row.add("COUNTRY");
-		keyboard.add(row);
-		row = new KeyboardRow();
 		row.add("GENRE");
 		keyboard.add(row);
 		row = new KeyboardRow();
