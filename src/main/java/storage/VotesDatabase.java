@@ -38,6 +38,18 @@ public class VotesDatabase
 		return votes;
 	}
 	
+	public synchronized List<Vote> getAllVotes() throws IOException
+	{
+		List<Vote> votes = new ArrayList<>();
+		List<String[]> allRecords = fileHandler.extractData();
+		
+		for(String[] record: allRecords)
+			votes.add(new Vote(
+					record[0], record[1], Boolean.parseBoolean(record[2])));
+		
+		return votes;
+	}
+	
 	public synchronized void addVote(Vote vote) throws IOException
 	{
 		fileHandler.addData(new String[] { 

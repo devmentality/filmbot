@@ -12,9 +12,10 @@ public class Main {
 	private static VotesDatabase votesDatabase;
 
 	public static void main(String[] args) throws Exception {
-        apiDatabase = new APIHandler(System.getenv("API_KEY"));
+        
 		IFilmDatabaseFileHandler ratingsHandler = new CSVHandler("VotesDb");
 		votesDatabase = new VotesDatabase(ratingsHandler);
+		apiDatabase = new APIHandler(System.getenv("API_KEY"), votesDatabase);
 		startTelegramBot();
 	}
     
