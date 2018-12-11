@@ -8,7 +8,6 @@ import java.util.Scanner;
 import dialog.Dialog;
 import dialog.Phrases;
 import storage.APIHandler;
-
 import storage.VotesDatabase;
 
 import structures.User;

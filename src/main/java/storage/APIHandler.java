@@ -25,7 +25,7 @@ public class APIHandler {
 	public Map<String, Integer> genresId;
 	public List<String> years;
 	public VotesDatabase votesDatabase;
-	
+
 	public APIHandler(String apiKey, VotesDatabase votesDatabase) throws MovieDbException {
 		api = new TheMovieDbApi(apiKey);
 		genresId = getGenresId();
@@ -53,9 +53,7 @@ public class APIHandler {
 	public Film getFilm(Map<Field, List<String>> options, List<String> savedFilmsIDs) throws MovieDbException {
 		List<RatedFilm> possibleFilms = getFilmsByOptions(options);
 		Collections.sort(possibleFilms, Comparator.reverseOrder());
-		
-		if (possibleFilms.size() == 0)
-			return new Film("None", null);
+
 		for (RatedFilm ratedFilm : possibleFilms)
 			if (!savedFilmsIDs.contains(ratedFilm.getFilm().ID))
 				return ratedFilm.getFilm();
@@ -86,13 +84,10 @@ public class APIHandler {
 
 	private List<RatedFilm> getFilmsByOptions(Map<Field, List<String>> commands) throws MovieDbException {
 		List<Vote> votes = new ArrayList<Vote>();
-		try
-		{
+		try {
 			votes = votesDatabase.getAllVotes();
+		} catch (IOException ex) {
 		}
-		catch(IOException ex)
-		{ }
-		
 		List<MovieBasic> discoveredFilms = getDiscoverResult(commands);
 		List<RatedFilm> filmList = new ArrayList<RatedFilm>();
 		if (discoveredFilms.size() == 0)
@@ -102,13 +97,11 @@ public class APIHandler {
 			if (commands.get(Field.YEAR) != null) {
 				String year = api.getMovieInfo(filmId, "en").getReleaseDate().substring(0, 4);
 				if (year.equals(commands.get(Field.YEAR).get(0)))
-					filmList.add(new RatedFilm(
-							new Film(filmId.toString(), film.getTitle()),
+					filmList.add(new RatedFilm(new Film(filmId.toString(), film.getTitle()),
 							RatingCalculator.CalculateRating(votes, film.getTitle())));
 			}
 			if (commands.get(Field.GENRE) != null)
-				filmList.add(new RatedFilm(
-						new Film(filmId.toString(), film.getTitle()),
+				filmList.add(new RatedFilm(new Film(filmId.toString(), film.getTitle()),
 						RatingCalculator.CalculateRating(votes, film.getTitle())));
 		}
 		return filmList;

@@ -32,6 +32,6 @@ public class Film {
 
 	@Override
 	public String toString() {
-		return String.format(title);
+		return title;
 	}
 }

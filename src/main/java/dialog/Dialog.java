@@ -52,52 +52,42 @@ public class Dialog {
 				return Phrases.NEXT_WITHOUT_OPT;
 			return getFilm(user.currentOptions);
 		}
-        
-        if (input.trim().startsWith("/like") || 
-        	input.trim().startsWith("/dislike"))
-        {
-        	Vote vote;
-        	try 
-        	{
-        		vote = ParseVote(user, input);
-        	}
-        	catch(IllegalArgumentException ex)
-        	{
-        		return ex.getMessage();
-        	}
-        	return processVote(vote);
-        }
-		
+
+		if (input.trim().startsWith("/like") || input.trim().startsWith("/dislike")) {
+			Vote vote;
+			try {
+				vote = ParseVote(user, input);
+			} catch (IllegalArgumentException ex) {
+				return ex.getMessage();
+			}
+			return processVote(vote);
+		}
+
 		return processGetFilmCommand(input);
 	}
-	
-	private Vote ParseVote(User user, String input) throws IllegalArgumentException
-	{
+
+	private Vote ParseVote(User user, String input) throws IllegalArgumentException {
 		String trimmedInput = input.trim();
 		int delimiterIndex = trimmedInput.indexOf(' ');
 		if (delimiterIndex == -1)
 			throw new IllegalArgumentException("Некорректный формат");
-		
+
 		String filmName = trimmedInput.substring(delimiterIndex + 1, trimmedInput.length());
-		
+
 		return new Vote(user.ID, filmName, input.startsWith("/like"));
 	}
-	
-	private String processVote(Vote vote)
-	{
-		try
-		{
+
+	private String processVote(Vote vote) {
+		try {
 			if (votesDatabase.containsVote(vote.getUserId(), vote.getFilmName()))
 				return "Вы уже оставили свой голос за этот фильм.";
 			votesDatabase.addVote(vote);
 			return "Ваш голос учтён!";
-		}
-		catch(IOException ex)
-		{
+		} catch (IOException ex) {
 			return "Извините, у нас проблемы";
 		}
 	}
-	
+
 	private String processGetFilmCommand(String input) throws MovieDbException {
 		String[] commandArray = input.trim().substring(1).split("/");
 
@@ -138,24 +128,19 @@ public class Dialog {
 	private String getFilm(Map<Field, List<String>> commands) throws MovieDbException {
 		user.changeCurrentOptions(commands);
 		Film film = apiDatabase.getFilm(commands, user.savedFilmsIDs);
-		if (film != null && film.ID.equals("None"))
-			return Phrases.NO_SUCH_FILM;
-		else if (film != null)
+		if (film != null)
 			user.addFilm(film);
 		else
 			user.clearCurrentOptions();
 		if (film == null)
-			return Phrases.NO_MORE_FILM;
-		
+			return Phrases.NO_SUCH_FILM;
+
 		int rating;
-		try
-		{
+		try {
 			rating = RatingCalculator.CalculateRating(votesDatabase.getVotes(film.title), film.title);
-			return String.format("%s\nРейтинг: %d", film.title, rating); 
-		}
-		catch(IOException ex)
-		{
-			return film.title; 
+			return String.format("%s\nРейтинг: %d", film.title, rating);
+		} catch (IOException ex) {
+			return film.title;
 		}
 	}
 
