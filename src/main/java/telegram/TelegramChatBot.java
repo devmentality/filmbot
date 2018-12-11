@@ -13,7 +13,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import com.omertron.themoviedbapi.MovieDbException;
 import storage.APIHandler;
-import storage.FilmRatingsDatabase;
+import storage.VotesDatabase;
 
 public class TelegramChatBot {
 
@@ -24,9 +24,9 @@ public class TelegramChatBot {
 	private static String BOT_TOKEN;
 	private static String BOT_USERNAME;
 	private APIHandler apiDatabase;
-	private FilmRatingsDatabase ratingsDatabase;
+	private VotesDatabase votesDatabase;
 
-	public TelegramChatBot(APIHandler apiDatabase, FilmRatingsDatabase ratingsDatabase) throws MovieDbException {
+	public TelegramChatBot(APIHandler apiDatabase, VotesDatabase votesDatabase) throws MovieDbException {
 		Map<String, String> env = System.getenv();
 		PROXY_HOST = env.get("PROXY_HOST");
 		PROXY_PORT = Integer.parseInt(env.get("PROXY_PORT"));
@@ -35,7 +35,7 @@ public class TelegramChatBot {
 		BOT_TOKEN = env.get("BOT_TOKEN");
 		BOT_USERNAME = env.get("BOT_USERNAME");
 		this.apiDatabase = apiDatabase;
-		this.ratingsDatabase = ratingsDatabase;
+		this.votesDatabase = votesDatabase;
 	}
 
 	public void startTelegramChatBot() {
@@ -56,7 +56,7 @@ public class TelegramChatBot {
 		botOptions.setProxyPort(PROXY_PORT);
 		botOptions.setProxyType(DefaultBotOptions.ProxyType.SOCKS5);
 
-		TelegramBot bot = new TelegramBot(apiDatabase, ratingsDatabase, BOT_USERNAME, BOT_TOKEN, botOptions);
+		TelegramBot bot = new TelegramBot(apiDatabase, votesDatabase, BOT_USERNAME, BOT_TOKEN, botOptions);
 
 		try {
 			telegramBotsApi.registerBot(bot);

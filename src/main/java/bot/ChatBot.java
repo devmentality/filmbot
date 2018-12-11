@@ -9,18 +9,18 @@ import dialog.Dialog;
 import dialog.Phrases;
 import storage.APIHandler;
 
-import storage.FilmRatingsDatabase;
+import storage.VotesDatabase;
 
 import structures.User;
 import utils.UserUtils;
 
 public class ChatBot {
 	private APIHandler apiDatabase;
-	private FilmRatingsDatabase ratingsDatabase;
+	private VotesDatabase votesDatabase;
 
-	public ChatBot(APIHandler apiDatabase, FilmRatingsDatabase ratingsDatabase) throws Exception {
+	public ChatBot(APIHandler apiDatabase, VotesDatabase votesDatabase) throws Exception {
 		this.apiDatabase = apiDatabase;
-		this.ratingsDatabase = ratingsDatabase;
+		this.votesDatabase = votesDatabase;
 	}
 
 	public void startChat(InputStream inputStream, OutputStream outputStream) throws Exception {
@@ -33,7 +33,7 @@ public class ChatBot {
 
 		User user = UserUtils.getUser(name, name);
         
-		Dialog dialog = new Dialog(user, apiDatabase, ratingsDatabase);
+		Dialog dialog = new Dialog(user, apiDatabase, votesDatabase);
 
 		printStream.println(dialog.startDialog());
 		try {
@@ -50,5 +50,4 @@ public class ChatBot {
 			scan.close();
 		}
 	}
-
 }
