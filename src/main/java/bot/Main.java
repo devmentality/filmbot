@@ -15,7 +15,7 @@ public class Main {
         apiDatabase = new APIHandler(System.getenv("API_KEY"));
 		IFilmDatabaseFileHandler ratingsHandler = new CSVHandler("VotesDb");
 		votesDatabase = new VotesDatabase(ratingsHandler);
-		startConsoleBot();
+		startTelegramBot();
 	}
     
 
