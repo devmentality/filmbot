@@ -38,7 +38,14 @@ public class VotesDatabaseTest
 		database.addVote(new Vote("1", "film", true));
 		assertFalse(database.containsVote("1", "another film"));
 	}
-	
+
+	@Test
+	public void containsVote_shouldReturnTrue_afterAddVote() throws IOException
+	{
+		database.addVote(new Vote("1", "film", true));
+		assertTrue(database.containsVote("1", "film"));
+	}
+
 	@Test
 	public void containsVote_shouldReturnTrue_whenContainsSameVote() throws IOException
 	{
