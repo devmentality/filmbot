@@ -10,19 +10,16 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-
-import storage.fakes.FilmDatabaseFileHandlerFake;
 import structures.Vote;
 
 public class StatisticsTest {
 	private VotesDatabase votesDatabase;
-	private IFilmDatabaseFileHandler fileHandler;
 	private Statistics statistics;
 
 	@Before
-	public void setUp() throws Exception {
-		fileHandler = new FilmDatabaseFileHandlerFake();
-		votesDatabase = new VotesDatabase(fileHandler);
+	public void setUp() throws Exception 
+	{
+		votesDatabase = new VotesDatabase();
 		createDatabase();
 		statistics = new Statistics(votesDatabase);
 	}

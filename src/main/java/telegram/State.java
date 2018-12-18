@@ -44,6 +44,48 @@ public class State {
 			keyboard = getBasicKeyboard();
 			return;
 		}
+		else if ("Рейтинг фильмов".equals(input))
+		{
+			command = "/filmsRating";
+			newState = currentState;
+			keyboard = getBasicKeyboard();
+			return;
+		}
+		else if ("Лайкающие".equals(input))
+		{
+			command = "/userLikes";
+			newState = currentState;
+			keyboard = getBasicKeyboard();
+			return;
+		}
+		else if ("Критиканты".equals(input))
+		{
+			command = "/userDislikes";
+			newState = currentState;
+			keyboard = getBasicKeyboard();
+			return;
+		}
+		else if ("Активные за день".equals(input))
+		{
+			command = "/topToday";
+			newState = currentState;
+			keyboard = getBasicKeyboard();
+			return;
+		}
+		else if ("За 3 дня".equals(input))
+		{
+			command = "/top3days";
+			newState = currentState;
+			keyboard = getBasicKeyboard();
+			return;
+		}
+		else if ("За неделю".equals(input))
+		{
+			command = "/topWeek";
+			newState = currentState;
+			keyboard = getBasicKeyboard();
+			return;
+		}
 
 		switch (currentState) {
 		case BASIC:

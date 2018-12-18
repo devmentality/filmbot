@@ -1,20 +1,21 @@
 package structures;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class User {
-
-	public String ID;
+public class User implements Cloneable
+{
+	public String id;
 	public String name;
 	public List<String> savedFilmsIDs;
 	public boolean firstTime;
 	public Map<Field, List<String>> currentOptions;
 
-	public User(String name, String fileID, List<String> savedFilmsIDs, Map<Field, List<String>> currentData) {
+	public User(String name, String id, List<String> savedFilmsIDs, Map<Field, List<String>> currentData) {
 		this.name = name;
-		this.ID = fileID;
+		this.id = id;
 		firstTime = savedFilmsIDs == null;
 		this.savedFilmsIDs = firstTime ? new ArrayList<String>() : savedFilmsIDs;
 
@@ -33,4 +34,26 @@ public class User {
 		currentOptions = null;
 	}
 
+	@Override
+	public Object clone()
+	{
+		try
+		{
+			User clonedUser = (User)super.clone();
+			if (savedFilmsIDs != null)
+				clonedUser.savedFilmsIDs = new ArrayList<>(savedFilmsIDs);
+			
+			clonedUser.currentOptions = new HashMap<Field, List<String>>();
+			if (currentOptions != null)
+				for(Field field: currentOptions.keySet())
+					clonedUser.currentOptions.put(field, 
+							new ArrayList<>(currentOptions.get(field)));
+			return clonedUser;
+			
+		}
+		catch(CloneNotSupportedException ex)
+		{
+			return null;
+		}
+	}
 }
