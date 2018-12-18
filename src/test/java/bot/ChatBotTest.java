@@ -1,6 +1,7 @@
 package bot;
 
 import storage.APIHandler;
+import storage.VotesDatabase;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -10,7 +11,10 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+
+import com.omertron.themoviedbapi.MovieDbException;
 
 import static org.mockito.Mockito.*;
 import static org.junit.Assert.assertThat;
@@ -24,7 +28,8 @@ public class ChatBotTest {
 	protected final String dialogStartFirst = "Назовите себя, пожалуйста\r\n" + "Добро пожаловать, test_name.";
 	protected final String dialogStartSecond = "Назовите себя, пожалуйста\r\n" + "Давно не виделись, test_name.\r\n";
 
-	private static APIHandler apiDatabase = mock(APIHandler.class);
+	private static APIHandler apiDatabase;
+	private VotesDatabase votesDatabase = mock(VotesDatabase.class);
 
 	private InputStream getInput(String[] commands) throws UnsupportedEncodingException {
 		StringBuilder builder = new StringBuilder();
@@ -35,6 +40,11 @@ public class ChatBotTest {
 		return new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
 	}
 
+	@Before
+	public void setUp() throws MovieDbException {
+		apiDatabase = new APIHandler(System.getenv("API_KEY"), votesDatabase);
+	}
+	
 	private void tryToDeleteSavedFile() {
 		File userFile = new File(name + ".csv");
 		userFile.delete();
@@ -43,44 +53,40 @@ public class ChatBotTest {
 	@Test
 	public void testStartDialogFirstTime() throws Exception {
 		String[] commands = { name, "/exit" };
-		new ChatBot(apiDatabase, null).startChat(getInput(commands), output);
+		new ChatBot(apiDatabase, votesDatabase).startChat(getInput(commands), output);
 		assertThat(output.toString(), containsString("Добро пожаловать"));
 	}
 
 	@Test
 	public void testStartDialogSecondTime() throws Exception {
 		String[] commands = { name, "/exit" };
-		new ChatBot(apiDatabase, null).startChat(getInput(commands), output);
+		new ChatBot(apiDatabase, votesDatabase).startChat(getInput(commands), output);
 		output.reset();
-		new ChatBot(apiDatabase, null).startChat(getInput(commands), output);
+		new ChatBot(apiDatabase, votesDatabase).startChat(getInput(commands), output);
 		assertThat(output.toString(), containsString("Давно не виделись"));
 	}
 
 	@Test
 	public void testStartDialogGetFilm() throws Exception {
-		ChatBot chatBot = mock(ChatBot.class);
-		InputStream input = getInput(new String[] { name, "/y 1999", "/exit" });
-		// doNothing().when(chatBot).startChat(isA(InputStream.class),
-		// isA(ByteArrayOutputStream.class));
-		chatBot.startChat(input, output);
-		verify(chatBot, times(1)).startChat(input, output);
+		String[] commands = new String[] { name, "/y 1999", "/exit" };
+		new ChatBot(apiDatabase, votesDatabase).startChat(getInput(commands), output);
+		assertThat(output.toString(), containsString("Fight Club"));
 	}
 
 	@Test
 	public void testStartDialogGetFilmManyOptions() throws Exception {
-		ChatBot chatBot = mock(ChatBot.class);
-		InputStream input = getInput(new String[] { name, "/y 2000 /g комедия", "/exit" });
-		chatBot.startChat(input, output);
-		verify(chatBot, times(1)).startChat(input, output);
+		String[] commands = new String[] { name, "/y 2000 /g Comedy", "/exit" };
+		new ChatBot(apiDatabase, votesDatabase).startChat(getInput(commands), output);
+		assertThat(output.toString(), containsString("How the Grinch Stole Christmas"));
 	}
 
 	@Test
 	public void testStartDialogGetFilmSecondTime() throws Exception {
-		ChatBot chatBot = mock(ChatBot.class);
-		InputStream input = getInput(new String[] { name, "/y 1999", "/exit" });
-		chatBot.startChat(input, output);
-		chatBot.startChat(input, output);
-		verify(chatBot, times(2)).startChat(input, output);
+		String[] commands = new String[]{ name, "/y 1999", "/exit" };
+		new ChatBot(apiDatabase, votesDatabase).startChat(getInput(commands), output);
+		output.reset();
+		new ChatBot(apiDatabase, votesDatabase).startChat(getInput(commands), output);
+		assertThat(output.toString(), containsString("The Matrix"));
 	}
 
 	@After

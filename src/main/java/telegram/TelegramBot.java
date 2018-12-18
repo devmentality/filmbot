@@ -1,5 +1,6 @@
 package telegram;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,7 +21,6 @@ import com.omertron.themoviedbapi.MovieDbException;
 
 import dialog.Dialog;
 import storage.APIHandler;
-import dialog.Phrases;
 import storage.VotesDatabase;
 import structures.Field;
 import structures.User;
@@ -60,7 +60,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 		userDialogState = new HashMap<String, DialogState>();
 	}
 
-	private String processInput(String input, String username, String chatId) throws MovieDbException {
+	private String processInput(String input, String username, String chatId) throws MovieDbException, IOException {
 		User user = UserUtils.getUser(username, chatId);
 		Dialog dialog = new Dialog(user, apiDatabase, votesDatabase);
 		String answer;
@@ -87,7 +87,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 						String.valueOf(query.getMessage().getChatId()), 
 						query);
 			}
-			catch(MovieDbException ex)
+			catch(MovieDbException | IOException ex)
 			{
 				ex.printStackTrace();
 			}
@@ -124,7 +124,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 			else
 				sendMessage(prepareOrdinaryMessage(answer, inputMessage.getChatId(), newState));
 			
-		} catch (MovieDbException e) {
+		} catch (MovieDbException | IOException e) {
 			// e.printStackTrace();
 		}
 	}
@@ -159,7 +159,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 		}
 	}
 	
-	private void processCallback(String username, String chatId, CallbackQuery query) throws MovieDbException
+	private void processCallback(String username, String chatId, CallbackQuery query) throws MovieDbException, IOException
 	{
 		String queryText = query.getData();
 		String rawAnswer = processInput(queryText, username, chatId);
@@ -204,7 +204,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         message.setReplyMarkup(markupKeyboard);
 	}
 
-	public String getAnswer(State state, String username, String id) throws MovieDbException {
+	public String getAnswer(State state, String username, String id) throws MovieDbException, IOException {
 		return state.command == null ? state.answerString : processInput(state.command, username, id);
 	}
 

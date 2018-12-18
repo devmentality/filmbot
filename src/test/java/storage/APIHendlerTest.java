@@ -19,12 +19,14 @@ import structures.Film;
 
 public class APIHendlerTest {
 
-	private APIHandler apiDatabase = mock(APIHandler.class);
+	private APIHandler apiDatabase;
 	private List<String> ids;
 	private Map<Field, List<String>> options;
+	private VotesDatabase votesDatabase = mock(VotesDatabase.class);
 
 	@Before
-	public void setUp() {
+	public void setUp() throws MovieDbException {
+		apiDatabase = new APIHandler(System.getenv("API_KEY"), votesDatabase);
 		ids = new ArrayList<String>();
 		ids.add("1");
 		ids.add("2");
@@ -35,11 +37,10 @@ public class APIHendlerTest {
 		options.put(Field.YEAR, new ArrayList<String>());
 		options.get(Field.YEAR).add("1999");
 	}
-
+	
 	@Test
 	public void testGetFilm() throws IOException, MovieDbException {
-		Film film = new Film("2", "Fight Club");
-		when(apiDatabase.getFilm(options, ids)).thenReturn(film);
+		Film film = new Film("4", "Die Hard");
 		assertEquals(film, apiDatabase.getFilm(options, ids));
 	}
 

@@ -63,6 +63,8 @@ public class APIHandler {
 	private List<MovieBasic> getDiscoverResult(Map<Field, List<String>> commands) throws MovieDbException {
 		Discover discover = new Discover();
 		List<MovieBasic> discoveredFilms = new ArrayList<MovieBasic>();
+		if (commands.containsKey(Field.YEAR) && commands.get(Field.YEAR).size() > 1)
+			return discoveredFilms;
 		for (Field field : commands.keySet()) {
 			try {
 				if (field == Field.YEAR)
@@ -73,7 +75,11 @@ public class APIHandler {
 			if (field == Field.GENRE) {
 				List<String> genres = new ArrayList<String>();
 				for (String genre : commands.get(field))
+				{
+					if (!genresId.containsKey(genre))
+						return new ArrayList<MovieBasic>();
 					genres.add(genresId.get(genre).toString());
+				}
 				discover.withGenres(String.join(",", genres));
 			}
 		}
