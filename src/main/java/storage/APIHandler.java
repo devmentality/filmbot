@@ -1,6 +1,5 @@
 package storage;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -89,11 +88,7 @@ public class APIHandler {
 	}
 
 	private List<RatedFilm> getFilmsByOptions(Map<Field, List<String>> commands) throws MovieDbException {
-		List<Vote> votes = new ArrayList<Vote>();
-		try {
-			votes = votesDatabase.getAllVotes();
-		} catch (IOException ex) {
-		}
+		List<Vote> votes = votesDatabase.getAllVotes();
 		List<MovieBasic> discoveredFilms = getDiscoverResult(commands);
 		List<RatedFilm> filmList = new ArrayList<RatedFilm>();
 		if (discoveredFilms.size() == 0)

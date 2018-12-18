@@ -14,13 +14,17 @@ import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import com.omertron.themoviedbapi.MovieDbException;
 
 import dialog.Dialog;
 import storage.APIHandler;
+import storage.InMemoryUserDataHandler;
 import storage.VotesDatabase;
 import structures.Field;
 import structures.User;
@@ -37,31 +41,27 @@ public class TelegramBot extends TelegramLongPollingBot {
 	private Map<String, Field> idCurrentFieldMap;
 	private APIHandler apiDatabase;
 	private VotesDatabase votesDatabase;
+	private InMemoryUserDataHandler userDataHandler;
 	private Map<String, DialogState> userDialogState;
 
-	public TelegramBot(APIHandler apiDatabase, VotesDatabase votesDatabase, String username, String token) {
-		this.bot_username = username;
-		this.bot_token = token;
-		this.apiDatabase = apiDatabase;
-		this.votesDatabase = votesDatabase;
-		idTotalFieldMap = new HashMap<String, Map<Field, List<String>>>();
-		idCurrentFieldMap = new HashMap<String, Field>();
-		userDialogState = new HashMap<String, DialogState>();
-	}
-
-	public TelegramBot(APIHandler apiDatabase, VotesDatabase votesDatabase, String username, String token, DefaultBotOptions options) {
+	public TelegramBot(APIHandler apiDatabase, VotesDatabase votesDatabase, InMemoryUserDataHandler userDataHandler,
+			String username, String token, DefaultBotOptions options) 
+	{
 		super(options);
 		this.bot_username = username;
 		this.bot_token = token;
 		this.apiDatabase = apiDatabase;
 		this.votesDatabase = votesDatabase;
+		this.userDataHandler = userDataHandler;
 		idTotalFieldMap = new HashMap<String, Map<Field, List<String>>>();
 		idCurrentFieldMap = new HashMap<String, Field>();
 		userDialogState = new HashMap<String, DialogState>();
 	}
 
-	private String processInput(String input, String username, String chatId) throws MovieDbException, IOException {
-		User user = UserUtils.getUser(username, chatId);
+	private String processInput(String input, String username, String chatId) 
+			throws MovieDbException, IOException 
+	{
+		User user = UserUtils.getUser(userDataHandler, username, chatId);
 		Dialog dialog = new Dialog(user, apiDatabase, votesDatabase);
 		String answer;
 		if (input.equals("/start"))
@@ -69,7 +69,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 		else
 			answer = dialog.processInput(input);
 		try {
-			UserUtils.saveUser(user);
+			UserUtils.saveUser(userDataHandler, user);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -114,8 +114,6 @@ public class TelegramBot extends TelegramLongPollingBot {
 
 			userDialogState.put(id, newState.newState);
 
-			
-			
 			if (isFilmAnswer(answer))
 			{
 				sendMessage(prepareFilmSendMessage(answer, inputMessage.getChatId()));
@@ -134,9 +132,32 @@ public class TelegramBot extends TelegramLongPollingBot {
 		SendMessage message = new SendMessage();
 		message.setText(answer);
 		message.setChatId(chatId);
-		message.setReplyMarkup(newState.getKeyboard());
+		ReplyKeyboardMarkup keyboard = newState.getKeyboard();
+		AttachRatingsAndActivityButtons(keyboard);
+		message.setReplyMarkup(keyboard);
 		
 		return message;
+	}
+	
+	private void AttachRatingsAndActivityButtons(ReplyKeyboardMarkup keyboard)
+	{
+		List<KeyboardRow> rows = keyboard.getKeyboard();
+		KeyboardRow ratingRow = new KeyboardRow();
+		ratingRow.add(new KeyboardButton("Рейтинг фильмов"));
+		rows.add(ratingRow);
+		
+		KeyboardRow activity1 = new KeyboardRow();
+		activity1.add(new KeyboardButton("Лайкающие"));
+		activity1.add(new KeyboardButton("Критиканты"));
+		rows.add(activity1);
+		
+		KeyboardRow activity2 = new KeyboardRow();
+		activity2.add(new KeyboardButton("Активные за день"));
+		activity2.add(new KeyboardButton("За 3 дня"));
+		activity2.add(new KeyboardButton("За неделю"));
+		rows.add(activity2);
+		
+		keyboard.setKeyboard(rows);
 	}
 	
 	private SendMessage prepareFilmSendMessage(String answer, long chatId)

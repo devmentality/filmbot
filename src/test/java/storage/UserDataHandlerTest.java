@@ -59,7 +59,7 @@ public class UserDataHandlerTest {
 		User user = userDataHandler.getUser();
 		assertEquals(new ArrayList<String>(), user.savedFilmsIDs);
 		assertEquals(userName, user.name);
-		assertEquals(userFileID, user.ID);
+		assertEquals(userFileID, user.id);
 	}
 
 	@Test

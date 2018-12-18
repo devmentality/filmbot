@@ -25,7 +25,9 @@ public class Dialog {
 	private VotesDatabase votesDatabase;
 	private Statistics statistics;
 
-	public Dialog(User user, APIHandler apiDatabase, VotesDatabase votesDatabase) throws MovieDbException, IOException {
+	public Dialog(User user, APIHandler apiDatabase, VotesDatabase votesDatabase) 
+			throws MovieDbException, IOException 
+	{
 		this.user = user;
 		this.apiDatabase = apiDatabase;
 		this.votesDatabase = votesDatabase;
@@ -98,18 +100,16 @@ public class Dialog {
 			throw new IllegalArgumentException("Некорректный формат");
 
 		String filmName = trimmedInput.substring(delimiterIndex + 1, trimmedInput.length());
-		return new Vote(user.ID, filmName, input.startsWith("/like"), new Date());
+		return new Vote(user.id, filmName, input.startsWith("/like"), new Date());
 	}
 
-	private String processVote(Vote vote) {
-		try {
-			if (votesDatabase.containsVote(vote.getUserId(), vote.getFilmName()))
-				return Phrases.VOTE_EXISTS;
-			votesDatabase.addVote(vote);
-			return Phrases.VOTE_ACCEPTED;
-		} catch (IOException ex) {
-			return Phrases.OOOPS;
-		}
+	private String processVote(Vote vote) 
+	{
+		if (votesDatabase.containsVote(vote.getUserId(), vote.getFilmName()))
+			return Phrases.VOTE_EXISTS;
+		votesDatabase.addVote(vote);
+		return Phrases.VOTE_ACCEPTED;
+		
 	}
 
 	private String processGetFilmCommand(String input) throws MovieDbException {
@@ -154,13 +154,8 @@ public class Dialog {
 		if (film == null)
 			return Phrases.NO_SUCH_FILM;
 
-		int rating;
-		try {
-			rating = RatingCalculator.CalculateRating(votesDatabase.getVotes(film.title), film.title);
-			return String.format("%s\nРейтинг: %d", film.title, rating);
-		} catch (IOException ex) {
-			return film.title;
-		}
+		int rating = RatingCalculator.CalculateRating(votesDatabase.getVotes(film.title), film.title);
+		return String.format("%s\nРейтинг: %d", film.title, rating);
 	}
 
 }
