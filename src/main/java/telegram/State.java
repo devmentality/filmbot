@@ -79,18 +79,11 @@ public class State {
 	}
 
 	private void processChosingState(String input) {
-//		if (!database.requestExistInDatabase(currentField, input)) {
-//			command = input;
-//			keyboard = getBasicKeyboard();
-//			newState = DialogState.BASIC;
-//			currentField = null;
-//		} else {
 			currentIdFieldMap.get(currentField).add(input);
 			newState = DialogState.MORE_OPTIONS;
 			answerString = "Есть еще параметры?";
 			currentField = null;
 			keyboard = getMoreOptionsKeyboard();
-//		}
 	}
 
 	private void processBasicState(String input) {

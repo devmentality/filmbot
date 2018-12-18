@@ -2,12 +2,14 @@ package dialog;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.omertron.themoviedbapi.MovieDbException;
 import storage.APIHandler;
+import storage.Statistics;
 import storage.VotesDatabase;
 
 import structures.Film;
@@ -21,11 +23,13 @@ public class Dialog {
 	private User user;
 	private APIHandler apiDatabase;
 	private VotesDatabase votesDatabase;
+	private Statistics statistics;
 
-	public Dialog(User user, APIHandler apiDatabase, VotesDatabase votesDatabase) throws MovieDbException {
+	public Dialog(User user, APIHandler apiDatabase, VotesDatabase votesDatabase) throws MovieDbException, IOException {
 		this.user = user;
 		this.apiDatabase = apiDatabase;
 		this.votesDatabase = votesDatabase;
+		this.statistics = new Statistics(this.votesDatabase);
 	}
 
 	public String startDialog() {
@@ -34,7 +38,7 @@ public class Dialog {
 		return String.format("Давно не виделись, %s.", user.name);
 	}
 
-	public String processInput(String input) throws MovieDbException {
+	public String processInput(String input) throws MovieDbException, IOException {
 		if (input.length() < 3)
 			return Phrases.SHORT_COMMAND;
 
@@ -63,6 +67,27 @@ public class Dialog {
 			return processVote(vote);
 		}
 
+		if (input.equals("/filmsRating"))
+			try {
+				return "Рейтинг фильмов по оценкам пользователей\n" + String.join("\n", statistics.getFilmRatingList());
+			} catch (IOException e) {
+				return Phrases.OOOPS;
+			}
+		if (input.equals("/userLikes"))
+			return "Самые активные пользователи по лайкам\n" + String.join("\n", statistics.getMostActiveLikeUsers());
+		if (input.equals("/userDislikes"))
+			return "Самые активные пользователи по дизлайкам\n"
+					+ String.join("\n", statistics.getMostActiveDislikeUsers());
+		if (input.equals("/topToday"))
+			return "Самые активные пользователи за сегодня\n"
+					+ String.join("\n", statistics.getMarksStatisticForPeriod(1));
+		if (input.equals("/top3days"))
+			return "Самые активные пользователи за 3 дня\n"
+					+ String.join("\n", statistics.getMarksStatisticForPeriod(3));
+		if (input.equals("/topWeek"))
+			return "Самые активные пользователи за неделю\n"
+					+ String.join("\n", statistics.getMarksStatisticForPeriod(7));
+
 		return processGetFilmCommand(input);
 	}
 
@@ -73,18 +98,17 @@ public class Dialog {
 			throw new IllegalArgumentException("Некорректный формат");
 
 		String filmName = trimmedInput.substring(delimiterIndex + 1, trimmedInput.length());
-
-		return new Vote(user.ID, filmName, input.startsWith("/like"));
+		return new Vote(user.ID, filmName, input.startsWith("/like"), new Date());
 	}
 
 	private String processVote(Vote vote) {
 		try {
 			if (votesDatabase.containsVote(vote.getUserId(), vote.getFilmName()))
-				return "Вы уже оставили свой голос за этот фильм.";
+				return Phrases.VOTE_EXISTS;
 			votesDatabase.addVote(vote);
-			return "Ваш голос учтён!";
+			return Phrases.VOTE_ACCEPTED;
 		} catch (IOException ex) {
-			return "Извините, у нас проблемы";
+			return Phrases.OOOPS;
 		}
 	}
 
@@ -106,11 +130,6 @@ public class Dialog {
 
 				if (!fieldShortCut.equals(field.shortCut()))
 					continue;
-
-//				if (!database.requestExistInDatabase(field, requestedOption)) {
-//					user.clearCurrentOptions();
-//					return field.noFilmsAtAll();
-//				}
 
 				if (commands.get(field) == null)
 					commands.put(field, new ArrayList<String>());

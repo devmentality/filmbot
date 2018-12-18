@@ -23,7 +23,6 @@ public class TelegramBotTest {
 		assertEquals(bot.getAnswer(state2, "name2", "2"), "Fight Club");
 	}
 
-	@Test
 	public void TwoUsersTestSameRequest() throws Exception {
 		TelegramBot bot = mock(TelegramBot.class);
 		State state1 = bot.getState("/y 1972", "1", DialogState.BASIC);

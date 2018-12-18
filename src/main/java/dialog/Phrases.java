@@ -7,8 +7,11 @@ public class Phrases {
 			+ "/g жанр\n" + "\n" + "/next следующий фильм\n" + "/help справка\n"
 			+ "/years доступные года создания фильмов\n" + "/genres доступные жанры\n"
 			+ "И помните, если фильм был уже кинут по какому-либо из параметров, "
-			+ "он не может быть кинут как по тому же самому или другому параметру ещё раз" 
-			+ "/like *название фильма* оценка предложенного фильма пользователем";
+			+ "он не может быть кинут как по тому же самому или другому параметру ещё раз\n"
+			+ "[/like|/dislike]  *название фильма* оценка предложенного фильма пользователем\n"
+			+ "/filmsRating топ-10 фильмов по оценкам пользователей\n"
+			+ "[/userLikes|/userDislikes] топ-10 пользователей, оценивших фильмы\n"
+			+ "[/topToday|/top3days|/topWeek] топ-10 самых активных пользователей за сегодня/3 дня/неделю";
 
 	public static final String UNKNOWN_COMMAND = "Неизвестная команда, загляни, пожалуйста, в справку";
 
@@ -29,5 +32,11 @@ public class Phrases {
 	public static final String AVAILAIBLE_GENRES = "Доступные жанры фильмов:\n";
 
 	public static final String AVAILAIBLE_YEARS = "Доступные года выпуска фильмов: 1900-2019";
+	
+	public static final String OOOPS = "Извините, у нас проблемы";
+	
+	public static final String VOTE_ACCEPTED = "Ваш голос учтён!";
+	
+	public static final String VOTE_EXISTS = "Вы уже оставили свой голос за этот фильм";
 
 }

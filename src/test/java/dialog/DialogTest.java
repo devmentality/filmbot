@@ -1,7 +1,9 @@
 package dialog;
 
 import storage.APIHandler;
+import storage.VotesDatabase;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,19 +22,21 @@ import static org.mockito.Mockito.*;
 public class DialogTest {
 	private User user;
 	private Dialog dialog;
-	private APIHandler apiDatabase = mock(APIHandler.class);
+	private APIHandler apiDatabase;
+	private VotesDatabase votesDatabase = mock(VotesDatabase.class);
 
 	@Before
 	public void setUp() throws Exception {
 		List<String> userList = new ArrayList<String>();
+		apiDatabase = new APIHandler(System.getenv("API_KEY"), votesDatabase);
 		user = new User("name", "name", userList, null);
-		dialog = new Dialog(user, apiDatabase, null);
+		dialog = new Dialog(user, apiDatabase, votesDatabase);
 	}
 
 	@Test
 	public void testStartDialogFirstTime() throws Exception {
 		user = new User("name", "name", null, null);
-		dialog = new Dialog(user, apiDatabase, null);
+		dialog = new Dialog(user, apiDatabase, votesDatabase);
 		assertEquals(String.format("Добро пожаловать, name.%s", Phrases.HELP), dialog.startDialog());
 	}
 
@@ -42,82 +46,69 @@ public class DialogTest {
 	}
 
 	@Test
-	public void testProcessInputHelp() throws MovieDbException {
+	public void testProcessInputHelp() throws MovieDbException, IOException {
 		assertEquals(Phrases.HELP, dialog.processInput("/help"));
 	}
 
 	@Test
-	public void testProcessInputShort() throws MovieDbException {
+	public void testProcessInputShort() throws MovieDbException, IOException {
 		assertEquals(Phrases.SHORT_COMMAND, dialog.processInput("c:"));
 	}
 
 	@Test
-	public void testGetYear() throws MovieDbException {
-		dialog = mock(Dialog.class);
-		when(dialog.processInput("/y 1994")).thenReturn("Leon");
-		assertEquals("Leon", dialog.processInput("/y 1994"));
+	public void testGetYear() throws MovieDbException, IOException {
+		assertEquals("Pulp Fiction\nРейтинг: 0", dialog.processInput("/y 1994"));
 	}
 
 	@Test
-	public void testGetNextYear() throws MovieDbException {
-		dialog = mock(Dialog.class);
-		when(dialog.processInput("/y 1994")).thenReturn("Leon");
-		when(dialog.processInput("/next")).thenReturn("Pulp Fiction");
-		assertEquals("Leon", dialog.processInput("/y 1994"));
-		assertEquals("Pulp Fiction", dialog.processInput("/next"));
+	public void testGetNextYear() throws MovieDbException, IOException {
+		assertEquals("Pulp Fiction\nРейтинг: 0", dialog.processInput("/y 1994"));
+		assertEquals("The Shawshank Redemption\nРейтинг: 0", dialog.processInput("/next"));
 	}
 
 	@Test
-	public void testGetGenre() throws MovieDbException {
-		dialog = mock(Dialog.class);
-		when(dialog.processInput("/g Thriller")).thenReturn("Fight Club");
-		assertEquals("Fight Club", dialog.processInput("/g Thriller"));
+	public void testGetGenre() throws MovieDbException, IOException {
+		assertEquals("The Predator\nРейтинг: 0", dialog.processInput("/g Thriller"));
 	}
 
 	@Test
-	public void testGetNextGenre() throws MovieDbException {
-		dialog = mock(Dialog.class);
-		when(dialog.processInput("/g Thriller")).thenReturn("Fight Club").thenReturn("Leon");
-		assertEquals("Fight Club", dialog.processInput("/g Thriller"));
-		assertEquals("Leon", dialog.processInput("/g Thriller"));
+	public void testGetNextGenre() throws MovieDbException, IOException {
+		assertEquals("The Predator\nРейтинг: 0", dialog.processInput("/g Thriller"));
+		assertEquals("Hunter Killer\nРейтинг: 0", dialog.processInput("/next"));
 	}
 
 	@Test
-	public void testUnknownCommand() throws MovieDbException {
+	public void testUnknownCommand() throws MovieDbException, IOException {
 		assertEquals(Phrases.UNKNOWN_COMMAND, dialog.processInput("/p lol"));
 	}
 
 	@Test
-	public void testGetYearWhichNotInFilmList() throws MovieDbException {
+	public void testGetYearWhichNotInFilmList() throws MovieDbException, IOException {
 		assertEquals(Phrases.NO_SUCH_FILM, dialog.processInput("/y 900"));
 	}
 
 	@Test
-	public void testGetGenreWhichNotInFilmList() throws MovieDbException {
+	public void testGetGenreWhichNotInFilmList() throws MovieDbException, IOException {
 		assertEquals(Phrases.NO_SUCH_FILM, dialog.processInput("/g телепузик"));
 	}
 
 	@Test
-	public void testNextWithoutOption() throws MovieDbException {
+	public void testNextWithoutOption() throws MovieDbException, IOException {
 		assertEquals(Phrases.NEXT_WITHOUT_OPT, dialog.processInput("/next"));
 	}
 
 	@Test
-	public void testYearAndGenre() throws MovieDbException {
-		dialog = mock(Dialog.class);
-		when(dialog.processInput("/y 1994 /g Comedy")).thenReturn("Pulp Fiction");
-		assertEquals("Pulp Fiction", dialog.processInput("/y 1994 /g Comedy"));
+	public void testYearAndGenre() throws MovieDbException, IOException {
+		assertEquals("Forrest Gump\nРейтинг: 0", dialog.processInput("/y 1994 /g Comedy"));
 	}
 
 	@Test
-	public void testTwoGenres() throws MovieDbException {
-		dialog = mock(Dialog.class);
-		when(dialog.processInput("/g Crime /g Comedy")).thenReturn("Pulp Fiction");
-		assertEquals("Pulp Fiction", dialog.processInput("/g Crime /g Comedy"));
+	public void testTwoGenres() throws MovieDbException, IOException {
+		assertEquals("A Simple Favor\nРейтинг: 0", dialog.processInput("/g Crime /g Comedy"));
 	}
 
 	@Test
-	public void testTwoYears() throws MovieDbException {
+	public void testTwoYears() throws MovieDbException, IOException {
 		assertEquals(Phrases.NO_SUCH_FILM, dialog.processInput("/y 1999 /y 1994"));
 	}
 
