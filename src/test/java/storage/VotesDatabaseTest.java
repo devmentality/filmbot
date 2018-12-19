@@ -2,18 +2,15 @@ package storage;
 
 import org.junit.Before;
 import org.junit.Test;
-import storage.fakes.FilmDatabaseFileHandlerFake;
 import structures.Vote;
 
 import static org.junit.Assert.assertTrue;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertArrayEquals;
 
 
 public class VotesDatabaseTest 
