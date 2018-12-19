@@ -97,6 +97,9 @@ public class TelegramBot extends TelegramLongPollingBot {
 		
 		Message inputMessage = update.getMessage();
 		String inputCommand = inputMessage.getText();
+		
+		System.out.println(inputCommand);
+		
 		String id = inputMessage.getChatId().toString();
 		String userFirstName = inputMessage.getFrom().getFirstName();
 
