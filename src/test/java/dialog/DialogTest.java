@@ -1,6 +1,7 @@
 package dialog;
 
 import storage.APIHandler;
+import storage.InMemoryUserDataHandler;
 import storage.VotesDatabase;
 
 import java.io.IOException;
@@ -30,13 +31,13 @@ public class DialogTest {
 		List<String> userList = new ArrayList<String>();
 		apiDatabase = new APIHandler(System.getenv("API_KEY"), votesDatabase);
 		user = new User("name", "name", userList, null);
-		dialog = new Dialog(user, apiDatabase, votesDatabase);
+		dialog = new Dialog(user, apiDatabase, votesDatabase, new InMemoryUserDataHandler());
 	}
 
 	@Test
 	public void testStartDialogFirstTime() throws Exception {
 		user = new User("name", "name", null, null);
-		dialog = new Dialog(user, apiDatabase, votesDatabase);
+		dialog = new Dialog(user, apiDatabase, votesDatabase, new InMemoryUserDataHandler());
 		assertEquals(String.format("Добро пожаловать, name.%s", Phrases.HELP), dialog.startDialog());
 	}
 

@@ -36,7 +36,7 @@ public class ChatBot {
 
 		User user = UserUtils.getUser(userDataHandler, name, name);
         
-		Dialog dialog = new Dialog(user, apiDatabase, votesDatabase);
+		Dialog dialog = new Dialog(user, apiDatabase, votesDatabase, userDataHandler);
 
 		printStream.println(dialog.startDialog());
 		try {

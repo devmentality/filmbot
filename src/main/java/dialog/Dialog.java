@@ -9,6 +9,7 @@ import java.util.Map;
 
 import com.omertron.themoviedbapi.MovieDbException;
 import storage.APIHandler;
+import storage.InMemoryUserDataHandler;
 import storage.Statistics;
 import storage.VotesDatabase;
 
@@ -25,11 +26,12 @@ public class Dialog {
 	private VotesDatabase votesDatabase;
 	private Statistics statistics;
 
-	public Dialog(User user, APIHandler apiDatabase, VotesDatabase votesDatabase) throws MovieDbException, IOException {
+	public Dialog(User user, APIHandler apiDatabase, VotesDatabase votesDatabase, 
+			InMemoryUserDataHandler userDataHandler) throws MovieDbException, IOException {
 		this.user = user;
 		this.apiDatabase = apiDatabase;
 		this.votesDatabase = votesDatabase;
-		this.statistics = new Statistics(this.votesDatabase);
+		this.statistics = new Statistics(this.votesDatabase, userDataHandler);
 	}
 
 	public String startDialog() {

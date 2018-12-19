@@ -16,17 +16,19 @@ public class Statistics {
 
 	private VotesDatabase votesDatabase;
 	private List<Vote> votes;
-
-	public Statistics(VotesDatabase votesDatabase) throws IOException {
+	private InMemoryUserDataHandler userDataHandler;
+	
+	public Statistics(VotesDatabase votesDatabase, InMemoryUserDataHandler userDataHandler) throws IOException {
 		this.votesDatabase = votesDatabase;
 		votes = this.votesDatabase.getAllVotes();
+		this.userDataHandler = userDataHandler;
 	}
 
 	public List<String> getMostActiveMarkUsers(Boolean isLikes) {
 		Map<String, Integer> userLikes = new HashMap<String, Integer>();
 		Map<String, Integer> userDislikes = new HashMap<String, Integer>();
 		for (Vote vote : votes) {
-			String userName = vote.getUserId();
+			String userName = userDataHandler.getNameById(vote.getUserId());
 			if (vote.isLike())
 				if (!userLikes.containsKey(userName))
 					userLikes.put(userName, 1);
@@ -93,7 +95,7 @@ public class Statistics {
 		Date dateNow = new Date();
 		for (Vote vote : votes) {
 			long dayDelta = (dateNow.getTime() - vote.getVoteDate().getTime()) / (24 * 60 * 60 * 1000);
-			String userName = vote.getUserId();
+			String userName = userDataHandler.getNameById(vote.getUserId());
 			if (dayDelta <= period) {
 				if (!userActivity.containsKey(userName))
 					userActivity.put(userName, 0);
@@ -118,5 +120,4 @@ public class Statistics {
 		}
 		return activeUsersList;
 	}
-
 }

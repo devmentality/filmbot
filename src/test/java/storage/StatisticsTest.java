@@ -10,21 +10,33 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import structures.User;
 import structures.Vote;
 
 public class StatisticsTest {
 	private VotesDatabase votesDatabase;
 	private Statistics statistics;
+	private InMemoryUserDataHandler userDataHandler;
 
 	@Before
 	public void setUp() throws Exception 
 	{
 		votesDatabase = new VotesDatabase();
+		userDataHandler = new InMemoryUserDataHandler();
 		createDatabase();
-		statistics = new Statistics(votesDatabase);
+		statistics = new Statistics(votesDatabase, userDataHandler);
+	}
+	
+	private void addUsers()
+	{
+		userDataHandler.saveUser(new User("user1", "user1", null, null));
+		userDataHandler.saveUser(new User("user2", "user2", null, null));
+		userDataHandler.saveUser(new User("user3", "user3", null, null));
 	}
 
 	private void createDatabase() throws Exception {
+		addUsers();
 		Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DATE, -2);
         Date threeDays = calendar.getTime();

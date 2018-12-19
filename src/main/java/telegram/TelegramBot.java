@@ -62,7 +62,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 			throws MovieDbException, IOException 
 	{
 		User user = UserUtils.getUser(userDataHandler, username, chatId);
-		Dialog dialog = new Dialog(user, apiDatabase, votesDatabase);
+		Dialog dialog = new Dialog(user, apiDatabase, votesDatabase, userDataHandler);
 		String answer;
 		if (input.equals("/start"))
 			answer = dialog.startDialog();
