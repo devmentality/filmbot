@@ -60,6 +60,7 @@ public class State {
 			command = statelessCommands.get(input);
 			newState = currentState;
 			keyboard = getCurrentStateKeyboard();
+			return;
 		}
 
 		switch (currentState) 
