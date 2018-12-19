@@ -16,7 +16,7 @@ public class Main {
 		votesDatabase = new VotesDatabase();
 		apiDatabase = new APIHandler(System.getenv("API_KEY"), votesDatabase);
 		userDataHandler = new InMemoryUserDataHandler();
-		startConsoleBot();
+		startTelegramBot();
 	}
     
 
