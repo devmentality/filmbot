@@ -7,7 +7,7 @@ import structures.NameIdPair;
 
 public class InMemoryUserDataHandler 
 {	
-	HashMap<NameIdPair, User> users;
+	private HashMap<NameIdPair, User> users;
 	
 	public InMemoryUserDataHandler() 
 	{

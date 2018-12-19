@@ -2,6 +2,7 @@ package telegram;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +26,8 @@ public class State {
 	public String command = null;
 	public String answerString;
 	public Field currentField;
+	
+	private Map<String, String> statelessCommands;
 
 	public State(DialogState state, Map<Field, List<String>> currentIdFieldMap, APIHandler apiDatabase,
 			Field currentField) throws MovieDbException {
@@ -32,6 +35,14 @@ public class State {
 		this.currentIdFieldMap = currentIdFieldMap;
 		this.apiDatabase = apiDatabase;
 		this.currentField = currentField;
+		
+		statelessCommands = new HashMap<String, String>();
+		statelessCommands.put("Рейтинг фильмов", "/filmsRating");
+		statelessCommands.put("Лайкающие", "/userLikes");
+		statelessCommands.put("Критиканты", "/userDislikes");
+		statelessCommands.put("Активные за день", "/topToday");
+		statelessCommands.put("За 3 дня", "/top3days");
+		statelessCommands.put("За неделю", "/topWeek");
 	}
 
 	public void processInput(String input) {
@@ -44,59 +55,37 @@ public class State {
 			keyboard = getBasicKeyboard();
 			return;
 		}
-		else if ("Рейтинг фильмов".equals(input))
+		if (statelessCommands.containsKey(input))
 		{
-			command = "/filmsRating";
+			command = statelessCommands.get(input);
 			newState = currentState;
-			keyboard = getBasicKeyboard();
-			return;
-		}
-		else if ("Лайкающие".equals(input))
-		{
-			command = "/userLikes";
-			newState = currentState;
-			keyboard = getBasicKeyboard();
-			return;
-		}
-		else if ("Критиканты".equals(input))
-		{
-			command = "/userDislikes";
-			newState = currentState;
-			keyboard = getBasicKeyboard();
-			return;
-		}
-		else if ("Активные за день".equals(input))
-		{
-			command = "/topToday";
-			newState = currentState;
-			keyboard = getBasicKeyboard();
-			return;
-		}
-		else if ("За 3 дня".equals(input))
-		{
-			command = "/top3days";
-			newState = currentState;
-			keyboard = getBasicKeyboard();
-			return;
-		}
-		else if ("За неделю".equals(input))
-		{
-			command = "/topWeek";
-			newState = currentState;
-			keyboard = getBasicKeyboard();
-			return;
+			keyboard = getCurrentStateKeyboard();
 		}
 
-		switch (currentState) {
-		case BASIC:
-			processBasicState(input);
-			break;
-		case CHOSING:
-			processChosingState(input);
-			break;
-		case MORE_OPTIONS:
-			processMoreOptionsState(input);
-			break;
+		switch (currentState) 
+		{
+			case BASIC:
+				processBasicState(input);
+				break;
+			case CHOSING:
+				processChosingState(input);
+				break;
+			case MORE_OPTIONS:
+				processMoreOptionsState(input);
+				break;
+		}
+	}
+	
+	private ReplyKeyboardMarkup getCurrentStateKeyboard()
+	{
+		switch (currentState) 
+		{
+			case CHOSING:
+				return getChosingKeyboard(currentField);
+			case MORE_OPTIONS:
+				return getMoreOptionsKeyboard();
+			default:
+				return getBasicKeyboard();
 		}
 	}
 
