@@ -25,9 +25,7 @@ public class Dialog {
 	private VotesDatabase votesDatabase;
 	private Statistics statistics;
 
-	public Dialog(User user, APIHandler apiDatabase, VotesDatabase votesDatabase) 
-			throws MovieDbException, IOException 
-	{
+	public Dialog(User user, APIHandler apiDatabase, VotesDatabase votesDatabase) throws MovieDbException, IOException {
 		this.user = user;
 		this.apiDatabase = apiDatabase;
 		this.votesDatabase = votesDatabase;
@@ -76,10 +74,11 @@ public class Dialog {
 				return Phrases.OOOPS;
 			}
 		if (input.equals("/userLikes"))
-			return "Самые активные пользователи по лайкам\n" + String.join("\n", statistics.getMostActiveLikeUsers());
+			return "Самые активные пользователи по лайкам\n"
+					+ String.join("\n", statistics.getMostActiveMarkUsers(true));
 		if (input.equals("/userDislikes"))
 			return "Самые активные пользователи по дизлайкам\n"
-					+ String.join("\n", statistics.getMostActiveDislikeUsers());
+					+ String.join("\n", statistics.getMostActiveMarkUsers(false));
 		if (input.equals("/topToday"))
 			return "Самые активные пользователи за сегодня\n"
 					+ String.join("\n", statistics.getMarksStatisticForPeriod(1));
@@ -103,13 +102,12 @@ public class Dialog {
 		return new Vote(user.id, filmName, input.startsWith("/like"), new Date());
 	}
 
-	private String processVote(Vote vote) 
-	{
+	private String processVote(Vote vote) {
 		if (votesDatabase.containsVote(vote.getUserId(), vote.getFilmName()))
 			return Phrases.VOTE_EXISTS;
 		votesDatabase.addVote(vote);
 		return Phrases.VOTE_ACCEPTED;
-		
+
 	}
 
 	private String processGetFilmCommand(String input) throws MovieDbException {

@@ -22,64 +22,42 @@ public class Statistics {
 		votes = this.votesDatabase.getAllVotes();
 	}
 
-	public List<String> getMostActiveLikeUsers() {
+	public List<String> getMostActiveMarkUsers(Boolean isLikes) {
 		Map<String, Integer> userLikes = new HashMap<String, Integer>();
-		for (Vote vote : votes) {
-			String userName = vote.getUserId();
-			if (!userLikes.containsKey(userName))
-				userLikes.put(userName, 0);
-			if (vote.isLike())
-				userLikes.put(userName, userLikes.get(userName) + 1);
-		}
-		List<String> usersLikesData = new ArrayList<String>();
-		for (Entry<String, Integer> likesData : userLikes.entrySet()) {
-			int likesCount = likesData.getValue();
-			if (likesCount == 0)
-				continue;
-			usersLikesData.add(Integer.toString(likesCount) + ": " + likesData.getKey());
-		}
-		Collections.sort(usersLikesData);
-		Collections.reverse(usersLikesData);
-		List<String> likeUsersList = new ArrayList<String>();
-		int count = 0;
-		for (String userLikesData : usersLikesData) {
-			count++;
-			String[] likesData = userLikesData.split(": ", 2);
-			likeUsersList.add(likesData[1] + ": " + likesData[0]);
-			if (count == 10)
-				break;
-		}
-		return likeUsersList;
-	}
-
-	public List<String> getMostActiveDislikeUsers() {
 		Map<String, Integer> userDislikes = new HashMap<String, Integer>();
 		for (Vote vote : votes) {
 			String userName = vote.getUserId();
-			if (!userDislikes.containsKey(userName))
-				userDislikes.put(userName, 0);
+			if (vote.isLike())
+				if (!userLikes.containsKey(userName))
+					userLikes.put(userName, 1);
+				else
+					userLikes.put(userName, userLikes.get(userName) + 1);
 			if (!vote.isLike())
-				userDislikes.put(userName, userDislikes.get(userName) + 1);
+				if (!userDislikes.containsKey(userName))
+					userDislikes.put(userName, 1);
+				else
+					userDislikes.put(userName, userDislikes.get(userName) + 1);
 		}
-		List<String> usersDislikesData = new ArrayList<String>();
-		for (Entry<String, Integer> dislikesData : userDislikes.entrySet()) {
-			int dislikesCount = dislikesData.getValue();
-			if (dislikesCount == 0)
+		List<String> usersMarksData = new ArrayList<String>();
+		Map<String, Integer> marks = isLikes ? userLikes : userDislikes;
+		for (Entry<String, Integer> likesData : marks.entrySet()) {
+			int marksCount = likesData.getValue();
+			if (marksCount == 0)
 				continue;
-			usersDislikesData.add(Integer.toString(dislikesCount) + ": " + dislikesData.getKey());
+			usersMarksData.add(Integer.toString(marksCount) + ": " + likesData.getKey());
 		}
-		Collections.sort(usersDislikesData);
-		Collections.reverse(usersDislikesData);
-		List<String> dislikeUsersList = new ArrayList<String>();
+		Collections.sort(usersMarksData);
+		Collections.reverse(usersMarksData);
+		List<String> marksList = new ArrayList<String>();
 		int count = 0;
-		for (String userDislikesData : usersDislikesData) {
+		for (String userMarksData : usersMarksData) {
 			count++;
-			String[] dislikesData = userDislikesData.split(": ", 2);
-			dislikeUsersList.add(dislikesData[1] + ": " + dislikesData[0]);
+			String[] marksData = userMarksData.split(": ", 2);
+			marksList.add(marksData[1] + ": " + marksData[0]);
 			if (count == 10)
 				break;
 		}
-		return dislikeUsersList;
+		return marksList;
 	}
 
 	public List<String> getFilmRatingList() throws IOException {

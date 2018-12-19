@@ -47,7 +47,7 @@ public class StatisticsTest {
 		List<String> mostActiveLikeUsers = new ArrayList<String>();
 		mostActiveLikeUsers.add("user3: 2");
 		mostActiveLikeUsers.add("user1: 1");
-		assertEquals(mostActiveLikeUsers, statistics.getMostActiveLikeUsers());
+		assertEquals(mostActiveLikeUsers, statistics.getMostActiveMarkUsers(true));
 	}
 
 	@Test
@@ -56,7 +56,7 @@ public class StatisticsTest {
 		mostActiveDislikeUsers.add("user3: 1");
 		mostActiveDislikeUsers.add("user2: 1");
 		mostActiveDislikeUsers.add("user1: 1");
-		assertEquals(mostActiveDislikeUsers, statistics.getMostActiveDislikeUsers());
+		assertEquals(mostActiveDislikeUsers, statistics.getMostActiveMarkUsers(false));
 	}
 
 	@Test
